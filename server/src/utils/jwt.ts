@@ -5,8 +5,7 @@ import { JWT_SECRET, JWT_REFRESH_SECRET } from "../constants/env";
 export interface JwtPayload {
   userId: string;
   email: string;
-  isDoctor?: boolean;
-  isAdmin?: boolean;
+  role: string;
 }
 
 // Generate access token

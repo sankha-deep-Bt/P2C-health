@@ -1,16 +1,31 @@
 import { Request, Response } from "express";
-import { createUser, findByEmail } from "../models/user.model";
 import { generateTokens } from "../utils/jwt";
 import {
   createOrUpdateSession,
   deleteSessionByToken,
 } from "../models/session.model";
 import { clearAuthCookies, setAuthCookies } from "../utils/cookies";
+import { createUser, findByEmail } from "../services/user.services";
+import UserModel, { UserDocument } from "../models/user.model";
+import DoctorModel, { DoctorDocument } from "../models/doctor.model";
+
+export type FoundUser =
+  | { role: "user"; data: UserDocument }
+  | { role: "doctor"; data: DoctorDocument };
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, password, confirmPassword, isDoctor, isAdmin } =
-      req.body;
+    const {
+      userType,
+      name,
+      email,
+      password,
+      confirmPassword,
+      specialization,
+      phone,
+      address,
+      isApproved,
+    } = req.body;
 
     if (!name || !email || !password || !confirmPassword) {
       return res.status(400).json({ message: "All fields are required" });
@@ -20,18 +35,35 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Passwords do not match" });
     }
 
-    const existingUser = await findByEmail(email);
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
+    let user: UserDocument | DoctorDocument;
+    let role: "user" | "doctor";
 
-    const user = await createUser({ name, email, password, isDoctor, isAdmin });
+    if (userType === "user") {
+      user = await createUser(UserModel, {
+        name,
+        email,
+        password,
+      });
+      role = "user";
+    } else if (userType === "doctor") {
+      user = await createUser(DoctorModel, {
+        name,
+        email,
+        password,
+        specialization,
+        phone,
+        address,
+        isApproved,
+      });
+      role = "doctor";
+    } else {
+      return res.status(400).json({ message: "Invalid user type" });
+    }
 
     const { accessToken, refreshToken } = generateTokens({
       userId: user._id.toString(), // convert ObjectId to string
       email: user.email,
-      isDoctor: user.isDoctor,
-      isAdmin: user.isAdmin,
+      role,
     });
 
     // Create session
@@ -57,26 +89,29 @@ export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and password are required" });
+      return res.status(400).json({ message: "All the fields are required" });
     }
 
-    const user = await findByEmail(email);
-    if (!user) {
+    // Find user across all models
+    // const found: FoundUser | null = await findByEmail(email);
+    const found = (await findByEmail(email)) as FoundUser | null;
+    if (!found) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    const { role, data: user } = found;
+
+    // Type narrowing ensures TS knows which model is in use
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    // Generate tokens with role
     const { accessToken, refreshToken } = generateTokens({
       userId: user._id.toString(),
       email: user.email,
-      isDoctor: user.isDoctor,
-      isAdmin: user.isAdmin,
+      role,
     });
 
     // Create or update session
