@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 export interface SessionDocument extends mongoose.Document {
   userId: mongoose.Types.ObjectId;
+  accessToken: string;
   refreshToken: string;
   userAgent?: string;
   createdAt: Date;
@@ -11,6 +12,7 @@ export interface SessionDocument extends mongoose.Document {
 export type SessionType = {
   _id: string;
   userId: string;
+  accessToken: string;
   refreshToken: string;
   userAgent?: string;
 };
@@ -22,6 +24,7 @@ const sessionSchema = new mongoose.Schema<SessionDocument>(
       ref: "User",
       required: true,
     },
+    accessToken: { type: String, required: true },
     refreshToken: { type: String, required: true },
     userAgent: { type: String },
   },
@@ -35,6 +38,7 @@ export const SessionModel = mongoose.model<SessionDocument>(
 
 export const createOrUpdateSession = async (
   userId: string,
+  accessToken: string,
   refreshToken: string,
   meta?: { userAgent?: string; ip?: string }
 ) => {
@@ -44,6 +48,7 @@ export const createOrUpdateSession = async (
 
   return SessionModel.create({
     userId: new mongoose.Types.ObjectId(userId),
+    accessToken,
     refreshToken,
     userAgent: meta?.userAgent,
     ip: meta?.ip,
@@ -51,6 +56,8 @@ export const createOrUpdateSession = async (
   });
 };
 
-export const deleteSessionByToken = async (refreshToken: string) => {
-  return SessionModel.deleteOne({ refreshToken });
+export const deleteSessionById = async (userId: string) => {
+  return SessionModel.deleteOne({
+    userId: new mongoose.Types.ObjectId(userId),
+  });
 };

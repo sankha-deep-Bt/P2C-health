@@ -38,7 +38,7 @@
 // };
 
 import { Request, Response, NextFunction } from "express";
-import { verifyAccessToken, JwtPayload } from "../utils/jwt";
+import { verifyToken, JwtPayload } from "../utils/jwt";
 
 export interface AuthRequest extends Request {
   user?: JwtPayload;
@@ -67,7 +67,7 @@ export const authenticate = (
       return res.status(401).json({ message: "No token provided" });
     }
 
-    const decoded = verifyAccessToken(token);
+    const decoded = verifyToken(token);
 
     if (!decoded) {
       return res.status(403).json({ message: "Invalid or expired token" });

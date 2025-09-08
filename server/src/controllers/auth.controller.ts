@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { generateTokens } from "../utils/jwt";
+import { generateTokens, verifyToken } from "../utils/jwt";
 import {
   createOrUpdateSession,
-  deleteSessionByToken,
+  deleteSessionById,
 } from "../models/session.model";
 import { clearAuthCookies, setAuthCookies } from "../utils/cookies";
 import { createUser, findByEmail } from "../services/user.services";
@@ -56,7 +56,12 @@ export const register = async (
       role: userType,
     });
 
-    await createOrUpdateSession(user._id.toString(), refreshToken, req);
+    await createOrUpdateSession(
+      user._id.toString(),
+      accessToken,
+      refreshToken,
+      req
+    );
     setAuthCookies({ res, accessToken, refreshToken });
 
     return res.status(201).json({
@@ -171,7 +176,12 @@ export const login = async (
       role,
     });
 
-    await createOrUpdateSession(user._id.toString(), refreshToken, req);
+    await createOrUpdateSession(
+      user._id.toString(),
+      accessToken,
+      refreshToken,
+      req
+    );
     setAuthCookies({ res, accessToken, refreshToken });
 
     return res.status(200).json({
@@ -238,15 +248,17 @@ export const login = async (
 
 export const logout = async (req: Request, res: Response) => {
   try {
-    const refreshToken = req.cookies?.refreshToken;
+    // const refreshToken = req.cookies?.refreshToken;
+    const accessToken = req.cookies.accessToken as string | undefined;
+    const payload = verifyToken(accessToken || "");
 
-    if (!refreshToken) {
+    if (!payload) {
       return res
         .status(400)
         .json({ message: "Refresh token not found in cookies" });
     }
 
-    await deleteSessionByToken(refreshToken);
+    await deleteSessionById(payload.userId);
     clearAuthCookies(res);
 
     return res.json({ message: "Logged out successfully" });
