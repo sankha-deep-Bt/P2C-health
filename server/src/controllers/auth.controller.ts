@@ -269,3 +269,54 @@ export const logout = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const refreshHandler = async (req: Request, res: Response) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken as string | undefined;
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: "No refresh token provided" });
+    }
+
+    const payload = verifyToken(refreshToken);
+
+    if (!payload || payload.type !== "refresh") {
+      return res
+        .status(403)
+        .json({ message: "Invalid or expired refresh token" });
+    }
+
+    // const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+    //   generateTokens(payload);
+
+    // Remove exp and iat
+    const { exp, iat, ...cleanPayload } = payload;
+
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+      generateTokens(cleanPayload);
+
+    await createOrUpdateSession(
+      payload.userId,
+      newAccessToken,
+      newRefreshToken,
+      req
+    );
+
+    setAuthCookies({
+      res,
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+
+    return res.status(200).json({
+      message: "Token refreshed successfully",
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error refreshing token",
+      error: (error as Error).message,
+    });
+  }
+};

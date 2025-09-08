@@ -34,12 +34,9 @@
 //   return UserModel.findById(id).lean();
 // };
 
-import mongoose, { Document, Model } from "mongoose";
-import UserModel, { UserDocument, UserType } from "../models/user.model";
-import DoctorModel, {
-  DoctorDocument,
-  DoctorType,
-} from "../models/doctor.model";
+import { Document, Model } from "mongoose";
+import UserModel, { UserType } from "../models/user.model";
+import DoctorModel, { DoctorType } from "../models/doctor.model";
 
 /* ---------- Generic Service Functions ---------- */
 
@@ -53,16 +50,16 @@ export const createUser = async <T extends Document>(
 };
 
 // Update an entity (User/Doctor)
-export const updateUser = async <T extends Document>(
-  model: Model<T>,
-  id: string,
-  data: Partial<UserType | DoctorType>
-): Promise<T | null> => {
-  return model.findByIdAndUpdate(id, data, {
-    new: true,
-    runValidators: true,
-  });
-};
+// export const updateUser = async <T extends Document>(
+//   model: Model<T>,
+//   id: string,
+//   data: Partial<UserType | DoctorType>
+// ): Promise<T | null> => {
+//   return model.findByIdAndUpdate(id, data, {
+//     new: true,
+//     runValidators: true,
+//   });
+// };
 
 // Delete an entity (User/Doctor)
 // export const deleteUser = async <T extends Document>(
@@ -106,6 +103,7 @@ export const deleteUser = async <T extends Document>(
 
   for (const [role, model] of models) {
     const deleted = await model.findByIdAndDelete(id);
+    // const deleteUser = deleted.data.omit("password");
     if (deleted) return { role, data: deleted };
   }
 
@@ -141,6 +139,36 @@ export const findById = async <T extends Document>(
   for (const [role, model] of models) {
     const user = await model.findById(id).exec();
     if (user) return { role, data: user };
+  }
+
+  return null;
+};
+
+type UpdateData = Partial<{
+  name: string;
+  email: string;
+  password: string;
+  specialization?: string;
+  phone?: string;
+  address?: string;
+  isApproved?: boolean;
+}>;
+
+export const updateUser = async <T extends Document>(
+  id: string,
+  data: UpdateData
+): Promise<FoundUser<T> | null> => {
+  const models: [Role, any][] = [
+    ["user", UserModel],
+    ["doctor", DoctorModel],
+  ];
+
+  for (const [role, model] of models) {
+    const updated = await model.findByIdAndUpdate(id, data, {
+      new: true,
+      runValidators: true,
+    });
+    if (updated) return { role, data: updated };
   }
 
   return null;
