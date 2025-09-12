@@ -4,8 +4,8 @@ import { NODE_ENV } from "../constants/env";
 
 export const ACCESS_TOKEN_NAME = "accessToken";
 export const REFRESH_TOKEN_NAME = "refreshToken";
-// export const REFRESH_PATH = "/auth/refresh";
-export const REFRESH_PATH = "/api/auth/";
+
+export const REFRESH_PATH = "/api/auth/refresh";
 
 const secure = NODE_ENV !== "development";
 

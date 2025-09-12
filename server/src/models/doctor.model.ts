@@ -36,8 +36,8 @@ export interface DoctorDocument extends Document {
     DoctorDocument,
     "password" | "comparePassword" | "omitPassword"
   >;
-  generateAccessToken(payload: JwtPayload): string;
-  generateRefreshToken(payload: JwtPayload): Promise<string>;
+  // generateAccessToken(payload: JwtPayload): string;
+  // generateRefreshToken(payload: JwtPayload): Promise<string>;
 }
 
 const doctorSchema = new mongoose.Schema<DoctorDocument>(
@@ -72,18 +72,18 @@ doctorSchema.methods.omitPassword = function () {
   return userObj;
 };
 
-doctorSchema.methods.generateAccessToken = function (payload: JwtPayload) {
-  return generateAccessToken(payload);
-};
+// doctorSchema.methods.generateAccessToken = function (payload: JwtPayload) {
+//   return generateAccessToken(payload);
+// };
 
-doctorSchema.methods.generateRefreshToken = async function (
-  payload: JwtPayload
-) {
-  const refreshToken = generateRefreshToken(payload);
-  this.refreshToken = refreshToken;
-  await this.save();
-  return refreshToken;
-};
+// doctorSchema.methods.generateRefreshToken = async function (
+//   payload: JwtPayload
+// ) {
+//   const refreshToken = generateRefreshToken(payload);
+//   this.refreshToken = refreshToken;
+//   await this.save();
+//   return refreshToken;
+// };
 
 const DoctorModel = mongoose.model<DoctorDocument>("Doctor", doctorSchema);
 

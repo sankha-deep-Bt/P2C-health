@@ -27,8 +27,8 @@ export interface UserDocument extends Document {
     UserDocument,
     "password" | "comparePassword" | "omitPassword"
   >;
-  generateAccessToken(payload: JwtPayload): string;
-  generateRefreshToken(payload: JwtPayload): Promise<string>;
+  // generateAccessToken(payload: JwtPayload): string;
+  // generateRefreshToken(payload: JwtPayload): Promise<string>;
 }
 
 /* ---------- Schema ---------- */
@@ -60,16 +60,16 @@ userSchema.methods.omitPassword = function () {
   return userObj;
 };
 
-userSchema.methods.generateAccessToken = function (payload: JwtPayload) {
-  return generateAccessToken(payload);
-};
+// userSchema.methods.generateAccessToken = function (payload: JwtPayload) {
+//   return generateAccessToken(payload);
+// };
 
-userSchema.methods.generateRefreshToken = async function (payload: JwtPayload) {
-  const refreshToken = generateRefreshToken(payload);
-  this.refreshToken = refreshToken;
-  await this.save();
-  return refreshToken;
-};
+// userSchema.methods.generateRefreshToken = async function (payload: JwtPayload) {
+//   const refreshToken = generateRefreshToken(payload);
+//   this.refreshToken = refreshToken;
+//   await this.save();
+//   return refreshToken;
+// };
 
 /* ---------- Model ---------- */
 const UserModel = mongoose.model<UserDocument>("User", userSchema);

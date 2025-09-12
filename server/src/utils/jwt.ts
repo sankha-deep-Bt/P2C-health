@@ -22,24 +22,6 @@ export const generateRefreshToken = (payload: JwtPayload): string => {
   return jwt.sign(payload, JWT_REFRESH_SECRET, options);
 };
 
-// Verify access token
-// export const verifyAccessToken = (token: string): JwtPayload | null => {
-//   try {
-//     return jwt.verify(token, JWT_SECRET) as JwtPayload;
-//   } catch {
-//     return null;
-//   }
-// };
-
-// // Verify refresh token
-// export const verifyRefreshToken = (token: string): JwtPayload | null => {
-//   try {
-//     return jwt.verify(token, JWT_REFRESH_SECRET) as JwtPayload;
-//   } catch {
-//     return null;
-//   }
-// };
-
 export const generateTokens = (model: any, payload: JwtPayload) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
