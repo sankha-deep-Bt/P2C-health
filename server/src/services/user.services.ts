@@ -1,39 +1,3 @@
-// import { DoctorDocument, DoctorType } from "../models/doctor.model";
-// import UserModel, { UserDocument, UserType } from "../models/user.model";
-
-// export const createUser = (data: UserType): Promise<UserDocument> => {
-//   const user = new UserModel(data).save();
-//   return user;
-// };
-
-// export const updateUser = (
-//   id: string,
-//   data: Partial<UserType | DoctorType>
-// ): Promise<UserDocument | DoctorDocument | null> => {
-//   return UserModel.findByIdAndUpdate(id, data, {
-//     new: true,
-//     runValidators: true,
-//   });
-// };
-
-// export const deleteUser = (
-//   id: string
-// ): Promise<UserDocument | DoctorDocument | null> => {
-//   return UserModel.findByIdAndDelete(id);
-// };
-
-// export const findByEmail = (
-//   email: string
-// ): Promise<UserDocument | DoctorDocument | null> => {
-//   return UserModel.findOne({ email }).exec();
-// };
-
-// export const findById = (
-//   id: string
-// ): Promise<UserDocument | DoctorDocument | null> => {
-//   return UserModel.findById(id).lean();
-// };
-
 import { Document, Model } from "mongoose";
 import UserModel, { UserType } from "../models/user.model";
 import DoctorModel, { DoctorType } from "../models/doctor.model";
@@ -49,45 +13,9 @@ export const createUser = async <T extends Document>(
   return entity.save();
 };
 
-// Update an entity (User/Doctor)
-// export const updateUser = async <T extends Document>(
-//   model: Model<T>,
-//   id: string,
-//   data: Partial<UserType | DoctorType>
-// ): Promise<T | null> => {
-//   return model.findByIdAndUpdate(id, data, {
-//     new: true,
-//     runValidators: true,
-//   });
-// };
-
-// Delete an entity (User/Doctor)
-// export const deleteUser = async <T extends Document>(
-//   model: Model<T>,
-//   id: string
-// ): Promise<T | null> => {
-//   return model.findByIdAndDelete(id);
-// };
-
-// // Find by email (User/Doctor)
-// export const findByEmail = async <T extends Document>(
-//   model: Model<T>,
-//   email: string
-// ): Promise<T | null> => {
-//   return model.findOne({ email }).exec();
-// };
-
-// // Find by ID (User/Doctor)
-// export const findById = async <T extends Document>(
-//   model: Model<T>,
-//   id: string
-// ): Promise<T | null> => {
-//   return model.findById(id);
-// };
-
 type Role = "user" | "doctor" | "admin";
 
-interface FoundUser<T extends Document> {
+export interface FoundUser<T extends Document> {
   role: Role;
   data: T;
 }
@@ -152,6 +80,8 @@ type UpdateData = Partial<{
   phone?: string;
   address?: string;
   isApproved?: boolean;
+  patientList?: string[];
+  refreshToken?: string;
 }>;
 
 export const updateUser = async <T extends Document>(

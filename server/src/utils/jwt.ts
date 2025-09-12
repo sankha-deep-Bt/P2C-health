@@ -40,7 +40,7 @@ export const generateRefreshToken = (payload: JwtPayload): string => {
 //   }
 // };
 
-export const generateTokens = (payload: JwtPayload) => {
+export const generateTokens = (model: any, payload: JwtPayload) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
   return { accessToken, refreshToken };

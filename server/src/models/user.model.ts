@@ -1,11 +1,17 @@
 import mongoose, { Document } from "mongoose";
 import { compareValue, hashValue } from "../utils/bcrypt";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  JwtPayload,
+} from "../utils/jwt";
 
 /* ---------- Interfaces ---------- */
 export interface UserType {
   name: string;
   email: string;
   password: string;
+  refreshToken?: string;
 }
 
 export interface UserDocument extends Document {
@@ -13,6 +19,7 @@ export interface UserDocument extends Document {
   name: string;
   email: string;
   password: string;
+  refreshToken?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(val: string): Promise<boolean>;
@@ -20,6 +27,8 @@ export interface UserDocument extends Document {
     UserDocument,
     "password" | "comparePassword" | "omitPassword"
   >;
+  generateAccessToken(payload: JwtPayload): string;
+  generateRefreshToken(payload: JwtPayload): Promise<string>;
 }
 
 /* ---------- Schema ---------- */
@@ -28,6 +37,7 @@ const userSchema = new mongoose.Schema<UserDocument>(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true, minlength: 6 },
+    refreshToken: { type: String, required: false },
   },
   { timestamps: true }
 );
@@ -50,35 +60,18 @@ userSchema.methods.omitPassword = function () {
   return userObj;
 };
 
+userSchema.methods.generateAccessToken = function (payload: JwtPayload) {
+  return generateAccessToken(payload);
+};
+
+userSchema.methods.generateRefreshToken = async function (payload: JwtPayload) {
+  const refreshToken = generateRefreshToken(payload);
+  this.refreshToken = refreshToken;
+  await this.save();
+  return refreshToken;
+};
+
 /* ---------- Model ---------- */
 const UserModel = mongoose.model<UserDocument>("User", userSchema);
-
-/* ---------- CRUD Helpers ---------- */
-// export const createUser = (data: UserType): Promise<UserDocument> => {
-//   const user = new UserModel(data).save();
-//   return user;
-// };
-
-// export const updateUser = (
-//   id: string,
-//   data: Partial<UserType>
-// ): Promise<UserDocument | null> => {
-//   return UserModel.findByIdAndUpdate(id, data, {
-//     new: true,
-//     runValidators: true,
-//   });
-// };
-
-// export const deleteUser = (id: string): Promise<UserDocument | null> => {
-//   return UserModel.findByIdAndDelete(id);
-// };
-
-// export const findByEmail = (email: string): Promise<UserDocument | null> => {
-//   return UserModel.findOne({ email }).exec();
-// };
-
-// export const findById = (id: string): Promise<UserDocument | null> => {
-//   return UserModel.findById(id).lean();
-// };
 
 export default UserModel;

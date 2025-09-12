@@ -1,5 +1,10 @@
 import mongoose, { Document } from "mongoose";
 import { compareValue, hashValue } from "../utils/bcrypt";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  JwtPayload,
+} from "../utils/jwt";
 
 export interface DoctorType {
   name: string;
@@ -9,6 +14,8 @@ export interface DoctorType {
   phone?: string;
   address?: string;
   isApproved: boolean;
+  patientList?: string[];
+  refreshToken?: string;
 }
 
 export interface DoctorDocument extends Document {
@@ -20,6 +27,8 @@ export interface DoctorDocument extends Document {
   phone?: string;
   address?: string;
   isApproved: boolean;
+  patientList?: string[];
+  refreshToken?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(val: string): Promise<boolean>;
@@ -27,6 +36,8 @@ export interface DoctorDocument extends Document {
     DoctorDocument,
     "password" | "comparePassword" | "omitPassword"
   >;
+  generateAccessToken(payload: JwtPayload): string;
+  generateRefreshToken(payload: JwtPayload): Promise<string>;
 }
 
 const doctorSchema = new mongoose.Schema<DoctorDocument>(
@@ -38,6 +49,8 @@ const doctorSchema = new mongoose.Schema<DoctorDocument>(
     phone: { type: String, required: false },
     address: { type: String, required: false },
     isApproved: { type: Boolean, default: false },
+    patientList: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    refreshToken: { type: String, required: false },
   },
   { timestamps: true }
 );
@@ -57,6 +70,19 @@ doctorSchema.methods.omitPassword = function () {
   const userObj = this.toObject();
   delete userObj.password;
   return userObj;
+};
+
+doctorSchema.methods.generateAccessToken = function (payload: JwtPayload) {
+  return generateAccessToken(payload);
+};
+
+doctorSchema.methods.generateRefreshToken = async function (
+  payload: JwtPayload
+) {
+  const refreshToken = generateRefreshToken(payload);
+  this.refreshToken = refreshToken;
+  await this.save();
+  return refreshToken;
 };
 
 const DoctorModel = mongoose.model<DoctorDocument>("Doctor", doctorSchema);

@@ -4,15 +4,16 @@ import {
   createOrUpdateSession,
   deleteSessionById,
 } from "../models/session.model";
-import { clearAuthCookies, setAuthCookies } from "../utils/cookies";
-import { createUser, findByEmail } from "../services/user.services";
+// import { clearAuthCookies, setAuthCookies } from "../utils/cookies";
+import {
+  createUser,
+  findByEmail,
+  FoundUser,
+  updateUser,
+} from "../services/user.services";
 import UserModel, { UserDocument } from "../models/user.model";
 import DoctorModel, { DoctorDocument } from "../models/doctor.model";
 import { RegisterInput, LoginInput } from "../middleware/validate.middleware";
-
-export type FoundUser =
-  | { role: "user"; data: UserDocument }
-  | { role: "doctor"; data: DoctorDocument };
 
 export const register = async (
   req: Request<{}, {}, RegisterInput>,
@@ -31,8 +32,10 @@ export const register = async (
     } = req.body;
 
     let user;
+    let model;
     if (userType === "doctor") {
-      user = await createUser(DoctorModel, {
+      model = DoctorModel;
+      user = await createUser(model, {
         name,
         email,
         password,
@@ -43,17 +46,22 @@ export const register = async (
       });
     } else {
       // userType === "user" or "admin"
-      user = await createUser(UserModel, {
+      model = UserModel;
+      user = await createUser(model, {
         name,
         email,
         password,
       });
     }
 
-    const { accessToken, refreshToken } = generateTokens({
+    const { accessToken, refreshToken } = generateTokens(model, {
       userId: user._id.toString(),
       email: user.email,
       role: userType,
+    });
+
+    await updateUser(user._id.toString(), {
+      refreshToken: refreshToken,
     });
 
     await createOrUpdateSession(
@@ -62,7 +70,7 @@ export const register = async (
       refreshToken,
       req
     );
-    setAuthCookies({ res, accessToken, refreshToken });
+    // setAuthCookies({ res, accessToken, refreshToken });
 
     return res.status(201).json({
       message: "Account created successfully",
@@ -71,84 +79,13 @@ export const register = async (
       refreshToken,
     });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Error creating account",
       error: (error as Error).message,
     });
   }
 };
-
-// export const register = async (req: Request, res: Response) => {
-
-//   try {
-//     const {
-//       userType,
-//       name,
-//       email,
-//       password,
-//       confirmPassword,
-//       specialization,
-//       phone,
-//       address,
-//       isApproved,
-//     } = req.body;
-
-//     if (!name || !email || !password || !confirmPassword) {
-//       return res.status(400).json({ message: "All fields are required" });
-//     }
-
-//     if (password !== confirmPassword) {
-//       return res.status(400).json({ message: "Passwords do not match" });
-//     }
-
-//     let user: UserDocument | DoctorDocument;
-//     let role: "user" | "doctor";
-
-//     if (userType === "user") {
-//       user = await createUser(UserModel, {
-//         name,
-//         email,
-//         password,
-//       });
-//       role = "user";
-//     } else if (userType === "doctor") {
-//       user = await createUser(DoctorModel, {
-//         name,
-//         email,
-//         password,
-//         specialization,
-//         phone,
-//         address,
-//         isApproved,
-//       });
-//       role = "doctor";
-//     } else {
-//       return res.status(400).json({ message: "Invalid user type" });
-//     }
-
-//     const { accessToken, refreshToken } = generateTokens({
-//       userId: user._id.toString(), // convert ObjectId to string
-//       email: user.email,
-//       role,
-//     });
-
-//     // Create session
-//     await createOrUpdateSession(user._id.toString(), refreshToken, req);
-//     setAuthCookies({ res, accessToken, refreshToken });
-
-//     return res.status(201).json({
-//       message: "Account created successfully",
-//       user: user.omitPassword(),
-//       accessToken,
-//       refreshToken,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({
-//       message: "Error creating account",
-//       error: (error as Error).message,
-//     });
-//   }
-// };
 
 export const login = async (
   req: Request<{}, {}, LoginInput>,
@@ -157,7 +94,9 @@ export const login = async (
   try {
     const { email, password } = req.body;
 
-    const found = (await findByEmail(email)) as FoundUser | null;
+    const found = (await findByEmail(email)) as
+      | FoundUser<UserDocument>
+      | FoundUser<DoctorDocument>;
     if (!found) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -169,11 +108,21 @@ export const login = async (
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
+    let model;
+    if (role === "doctor") {
+      model = DoctorModel;
+    } else {
+      model = UserModel;
+    }
 
-    const { accessToken, refreshToken } = generateTokens({
+    const { accessToken, refreshToken } = generateTokens(model, {
       userId: user._id.toString(),
       email: user.email,
       role,
+    });
+
+    await updateUser(user._id.toString(), {
+      refreshToken: refreshToken,
     });
 
     await createOrUpdateSession(
@@ -182,7 +131,7 @@ export const login = async (
       refreshToken,
       req
     );
-    setAuthCookies({ res, accessToken, refreshToken });
+    // setAuthCookies({ res, accessToken, refreshToken });
 
     return res.status(200).json({
       message: "Login successful",
@@ -191,6 +140,7 @@ export const login = async (
       refreshToken,
     });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Error logging in",
       error: (error as Error).message,
@@ -198,71 +148,28 @@ export const login = async (
   }
 };
 
-// export const login = async (req: Request, res: Response) => {
-//   try {
-//     const { email, password } = req.body;
-
-//     if (!email || !password) {
-//       return res.status(400).json({ message: "All the fields are required" });
-//     }
-
-//     // Find user across all models
-//     // const found: FoundUser | null = await findByEmail(email);
-//     const found = (await findByEmail(email)) as FoundUser | null;
-//     if (!found) {
-//       return res.status(401).json({ message: "Invalid credentials" });
-//     }
-
-//     const { role, data: user } = found;
-
-//     // Type narrowing ensures TS knows which model is in use
-//     const isMatch = await user.comparePassword(password);
-//     if (!isMatch) {
-//       return res.status(401).json({ message: "Invalid credentials" });
-//     }
-
-//     // Generate tokens with role
-//     const { accessToken, refreshToken } = generateTokens({
-//       userId: user._id.toString(),
-//       email: user.email,
-//       role,
-//     });
-
-//     // Create or update session
-//     await createOrUpdateSession(user._id.toString(), refreshToken, req);
-//     setAuthCookies({ res, accessToken, refreshToken });
-
-//     return res.status(200).json({
-//       message: "Login successful",
-//       user: user.omitPassword(),
-//       accessToken,
-//       refreshToken,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({
-//       message: "Error logging in",
-//       error: (error as Error).message,
-//     });
-//   }
-// };
-
 export const logout = async (req: Request, res: Response) => {
   try {
     // const refreshToken = req.cookies?.refreshToken;
-    const accessToken = req.cookies.accessToken as string | undefined;
-    const payload = verifyToken(accessToken || "");
+    const refreshToken =
+      req.cookies?.refreshToken || req.headers.authorization?.split(" ")[1];
+    const payload = verifyToken(refreshToken || "");
 
     if (!payload) {
-      return res
-        .status(400)
-        .json({ message: "Refresh token not found in cookies" });
+      return res.status(400).json({ message: "No refresh token provided " });
     }
-
+    const user = await updateUser(payload.userId, {
+      refreshToken: "",
+    });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
     await deleteSessionById(payload.userId);
-    clearAuthCookies(res);
+    // clearAuthCookies(res);
 
     return res.json({ message: "Logged out successfully" });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Error logging out",
       error: (error as Error).message,
@@ -272,29 +179,39 @@ export const logout = async (req: Request, res: Response) => {
 
 export const refreshHandler = async (req: Request, res: Response) => {
   try {
-    const refreshToken = req.cookies?.refreshToken as string | undefined;
+    const refreshToken =
+      req.cookies?.refreshToken || req.headers.authorization?.split(" ")[1];
 
     if (!refreshToken) {
       return res.status(401).json({ message: "No refresh token provided" });
     }
 
+    // Verify refresh token
     const payload = verifyToken(refreshToken);
-
     if (!payload || payload.type !== "refresh") {
       return res
         .status(403)
         .json({ message: "Invalid or expired refresh token" });
     }
 
-    // const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-    //   generateTokens(payload);
-
-    // Remove exp and iat
+    // Clean payload (remove exp/iat)
     const { exp, iat, ...cleanPayload } = payload;
 
-    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-      generateTokens(cleanPayload);
+    let model;
+    if (payload.role === "doctor") {
+      model = DoctorModel;
+    } else {
+      model = UserModel;
+    }
 
+    // Generate new tokens
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+      generateTokens(model, cleanPayload);
+
+    // Update refresh token in DB (single-device) or in sessions collection (multi-device)
+    await updateUser(payload.userId, { refreshToken: newRefreshToken });
+
+    // Update session store (optional if you want session tracking)
     await createOrUpdateSession(
       payload.userId,
       newAccessToken,
@@ -302,20 +219,95 @@ export const refreshHandler = async (req: Request, res: Response) => {
       req
     );
 
-    setAuthCookies({
-      res,
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-    });
-
     return res.status(200).json({
       message: "Token refreshed successfully",
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
     });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Error refreshing token",
+      error: (error as Error).message,
+    });
+  }
+};
+
+// export const verifyEmail = async (req: Request, res: Response) => {
+//   try {
+//     const { email } = req.body;
+
+//     const found = (await findByEmail(email)) as
+//       | FoundUser<UserDocument>
+//       | FoundUser<DoctorDocument>;
+//     if (!found) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     return res.status(200).json({ message: "Email is registered" });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       message: "Error verifying email",
+//       error: (error as Error).message,
+//     });
+//   }
+// }
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    const found = (await findByEmail(email)) as
+      | FoundUser<UserDocument>
+      | FoundUser<DoctorDocument>;
+    if (!found) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // In a real application, you would send an email with a reset link/token
+    //TODO: Implement email service to send reset link
+    return res
+      .status(200)
+      .json({ message: "Password reset link has been sent to your email" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Error processing forgot password",
+      error: (error as Error).message,
+    });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { email, oldPassword, newPassword } = req.body;
+
+    const found = (await findByEmail(email)) as
+      | FoundUser<UserDocument>
+      | FoundUser<DoctorDocument>;
+    if (!found) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (oldPassword === newPassword) {
+      return res
+        .status(400)
+        .json({ message: "New password must be different from old password" });
+    }
+
+    const { data: user } = found;
+
+    user.password = newPassword;
+    await updateUser(user._id.toString(), { password: newPassword });
+
+    return res
+      .status(200)
+      .json({ message: "Password reset successfully. Please log in." });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Error resetting password",
       error: (error as Error).message,
     });
   }

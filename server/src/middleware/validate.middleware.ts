@@ -39,6 +39,7 @@ export const validate =
       });
       return next();
     } catch (err: any) {
+      console.error(err);
       return res.status(400).json({
         message: "Validation error",
         errors: err.errors,

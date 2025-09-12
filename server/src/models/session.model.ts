@@ -44,7 +44,7 @@ export const createOrUpdateSession = async (
 ) => {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-  await SessionModel.deleteOne({ refreshToken });
+  await SessionModel.deleteOne({ userId });
 
   return SessionModel.create({
     userId: new mongoose.Types.ObjectId(userId),

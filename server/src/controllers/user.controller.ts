@@ -1,12 +1,8 @@
 // controllers/user.controller.ts
 import { Request, Response } from "express";
 import { AuthRequest } from "../middleware/auth.middleware";
-import { clearAuthCookies } from "../utils/cookies";
-import UserModel from "../models/user.model";
-// import DoctorModel from "../models/doctor.model";
 import { deleteUser, findById, updateUser } from "../services/user.services";
 
-/* ------------------ GET PROFILE ------------------ */
 export const getSelfProfile = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
@@ -66,6 +62,34 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// export const deleteProfile = async (req: AuthRequest, res: Response) => {
+//   try {
+//     if (!req.user) {
+//       return res.status(401).json({ message: "Unauthorized" });
+//     }
+
+//     const userId = req.user.userId;
+
+//     const deleted = await deleteUser(userId);
+//     if (!deleted) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     // Clear cookies after deletion
+//     clearAuthCookies(res);
+
+//     return res.status(200).json({
+//       message: "User deleted successfully",
+//       user: deleted.data, // Return deleted user info without password
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       message: "Error deleting user",
+//       error: (error as Error).message,
+//     });
+//   }
+// };
+
 export const deleteProfile = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -79,12 +103,12 @@ export const deleteProfile = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Clear cookies after deletion
-    clearAuthCookies(res);
+    // For mobile apps, no need to clear cookies.
+    // Tokens should just be discarded client-side.
 
     return res.status(200).json({
       message: "User deleted successfully",
-      user: deleted.data, // Return deleted user info without password
+      user: deleted.data,
     });
   } catch (error) {
     return res.status(500).json({
