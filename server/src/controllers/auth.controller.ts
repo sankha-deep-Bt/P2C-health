@@ -233,6 +233,7 @@ export const refreshHandler = async (req: Request, res: Response) => {
   }
 };
 
+//TODO: Implement email verification using nodemailer or resend
 // export const verifyEmail = async (req: Request, res: Response) => {
 //   try {
 //     const { email } = req.body;
@@ -265,7 +266,6 @@ export const forgotPassword = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // In a real application, you would send an email with a reset link/token
     //TODO: Implement email service to send reset link
     return res
       .status(200)

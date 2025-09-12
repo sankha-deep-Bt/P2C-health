@@ -1,20 +1,19 @@
 import mongoose, { Document } from "mongoose";
-// import { hashValue } from "../utils/hash";
 
 export interface MessageType {
-  senderId: string;
-  receiverId: string;
+  senderId: mongoose.Types.ObjectId;
+  receiverId?: mongoose.Types.ObjectId; // for 1-to-1
+  chatId?: mongoose.Types.ObjectId; // for group chats
   content: string;
-  timestamp: Date;
   isRead: boolean;
 }
 
 export interface MessageDocument extends Document {
   _id: mongoose.Types.ObjectId;
   senderId: mongoose.Types.ObjectId;
-  receiverId: mongoose.Types.ObjectId;
+  receiverId?: mongoose.Types.ObjectId;
+  chatId?: mongoose.Types.ObjectId;
   content: string;
-  timestamp: Date;
   isRead: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -30,10 +29,12 @@ const messageSchema = new mongoose.Schema<MessageDocument>(
     receiverId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
-    },
+    }, // optional → used only in direct 1-to-1 messages
+    chatId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Chat",
+    }, // optional → used only for group messages
     content: { type: String, required: true },
-    timestamp: { type: Date, default: Date.now },
     isRead: { type: Boolean, default: false },
   },
   { timestamps: true }

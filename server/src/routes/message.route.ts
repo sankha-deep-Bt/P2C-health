@@ -9,3 +9,5 @@ router.use(authenticate);
 
 router.get("/:userToChatId", getMessages);
 router.post("/:userToChatId", sendMessage);
+
+export default router;
