@@ -1,0 +1,26 @@
+Phase 1: Core Functionality
+- User Registration - Done
+- Authentication and Authorization - Done
+- Messaging and Group Chat with Video Calling -Done?
+- Doctor Profile Management
+- Appointment Booking - Done?
+- Payment Gateway Integration
+- Appointment Management - Done?
+- Notification System-Frontend
+
+Phase 2: AI Integration
+- Chatbot Integration
+- Report Scanning
+- AI-powered Insights
+
+Phase 3: Data Integration
+- Hand Diagram with Acupuncture Points
+- Personalized Recommendations
+- E-books Integration
+
+
+
+
+Self Notes =>
+add - verify email socket.io reviews redis video call doctor profile management
+test - Appointment System and reset-password route
