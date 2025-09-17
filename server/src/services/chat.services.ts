@@ -38,3 +38,24 @@ export const addMessageToChat = async (
   await ChatModel.findByIdAndUpdate(chatId, { lastMessage: message._id });
   return message;
 };
+
+export const findChatById = async (
+  chatId: string
+): Promise<ChatDocument | null> => {
+  return ChatModel.findById(chatId)
+    .populate("members", "name email")
+    .populate("lastMessage")
+    .exec();
+};
+
+export const deleteChatById = async (chatId: string): Promise<void> => {
+  await ChatModel.findByIdAndDelete(chatId);
+  await MessageModel.deleteMany({ chatId });
+};
+
+export const updateChat = async (
+  chatId: string,
+  chat: ChatDocument
+): Promise<ChatDocument | null> => {
+  return ChatModel.findByIdAndUpdate(chatId, chat, { new: true }).exec();
+};

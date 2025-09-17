@@ -1,31 +1,6 @@
-// import { Stack } from "expo-router";
-
-// export default function RootLayout() {
-//   return <Stack />;
-// }
-
 import { Stack } from "expo-router";
-import { useFonts } from "expo-font";
-import { SplashScreen } from "expo-router";
-import { useEffect } from "react";
 
 export default function RootLayout() {
-  // preload custom fonts (optional)
-  // const [loaded, error] = useFonts({
-  //   Inter: require("../assets/fonts/Inter-Regular.ttf"),
-  //   InterBold: require("../assets/fonts/Inter-Bold.ttf"),
-  // });
-
-  // useEffect(() => {
-  //   if (loaded || error) {
-  //     SplashScreen.hideAsync();
-  //   }
-  // }, [loaded, error]);
-
-  // if (!loaded && !error) {
-  //   return null;
-  // }
-
   return (
     <Stack
       screenOptions={{
@@ -41,7 +16,10 @@ export default function RootLayout() {
         name="auth/login"
         options={{ title: "Login", headerShown: false }}
       />
-      <Stack.Screen name="chat/[id]" options={{ title: "Chat" }} />
+      <Stack.Screen
+        name="patientDashboard/"
+        options={{ title: "Patient", headerShown: false }}
+      />
     </Stack>
   );
 }

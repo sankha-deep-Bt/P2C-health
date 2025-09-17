@@ -10,9 +10,11 @@ import {
 
 const router = Router();
 
-router.get("/profile", authenticate, getSelfProfile);
-router.get("/:id", authenticate, getProfile);
-router.put("/", authenticate, updateProfile);
-router.delete("/", authenticate, deleteProfile);
+router.use(authenticate);
+
+router.get("/profile", getSelfProfile);
+router.get("/:id", getProfile);
+router.put("/", updateProfile);
+router.delete("/", deleteProfile);
 
 export default router;

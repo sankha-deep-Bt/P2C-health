@@ -11,9 +11,9 @@ const router = Router();
 
 router.use(authenticate);
 
-router.post("/appointments", bookAppointment);
-router.get("/appointments", getAppointments);
-router.patch("/appointments/:appointmentId/status", updateAppointment);
-router.delete("/appointments/:appointmentId", deleteAppointment);
+router.get("/", getAppointments);
+router.post("/book", bookAppointment);
+router.patch("/:appointmentId/status", updateAppointment);
+router.delete("/:appointmentId", deleteAppointment);
 
 export default router;

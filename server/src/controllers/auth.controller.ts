@@ -14,22 +14,14 @@ import {
 import UserModel, { UserDocument } from "../models/user.model";
 import DoctorModel, { DoctorDocument } from "../models/doctor.model";
 import { RegisterInput, LoginInput } from "../middleware/validate.middleware";
+import sendPasswordResetEmail from "../utils/nodemailer";
 
 export const register = async (
   req: Request<{}, {}, RegisterInput>,
   res: Response
 ) => {
   try {
-    const {
-      userType,
-      name,
-      email,
-      password,
-      specialization,
-      phone,
-      address,
-      isApproved,
-    } = req.body;
+    const { userType, name, email, password } = req.body;
 
     let user;
     let model;
@@ -39,10 +31,6 @@ export const register = async (
         name,
         email,
         password,
-        specialization,
-        phone,
-        address,
-        isApproved,
       });
     } else {
       // userType === "user" or "admin"
@@ -267,6 +255,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     }
 
     //TODO: Implement email service to send reset link
+    await sendPasswordResetEmail(email);
     return res
       .status(200)
       .json({ message: "Password reset link has been sent to your email" });

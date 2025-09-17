@@ -1,6 +1,7 @@
 import { Document, Model } from "mongoose";
 import UserModel, { UserType } from "../models/user.model";
 import DoctorModel, { DoctorType } from "../models/doctor.model";
+import sendPasswordResetEmail from "../utils/nodemailer";
 
 /* ---------- Generic Service Functions ---------- */
 
@@ -103,3 +104,23 @@ export const updateUser = async <T extends Document>(
 
   return null;
 };
+
+// export const passwordReset = async (email: string) => {
+//   // Implementation for sending password reset email
+//   await sendPasswordResetEmail(email);
+
+//   console.log(`Sending password reset email to ${email}`);
+// };
+
+// export const resetPassword = async (userId: string, newPassword: string) => {
+//   // Implementation for resetting the user's password
+//   // This is a placeholder function and should be implemented as per the application's requirements
+//   const user = await UserModel.findById(userId);
+//   if (user) {
+//     user.password = newPassword;
+//     await user.save();
+//     console.log(`Password reset for user ID: ${userId}`);
+//   } else {
+//     console.log(`User with ID: ${userId} not found`);
+//   }
+// };

@@ -102,6 +102,9 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
     }
 
     const messages = await findMessagesByChatId(userToChatId, userId);
+    if (!messages) {
+      return res.status(404).json({ message: "No messages found" });
+    }
     return res.status(200).json({ success: true, data: messages });
   } catch (error) {
     console.error(error);

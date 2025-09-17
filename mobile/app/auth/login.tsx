@@ -41,10 +41,11 @@ export default function LoginPage() {
       await AsyncStorage.setItem("userType", data.userType);
 
       Alert.alert("Success", "Login successful!");
+
       if (data.userType === "doctor") {
-        router.replace("/doctorDashboard");
+        router.replace("/doctorDashboard/dashboard" as any);
       } else {
-        router.replace("/patientDashboard");
+        router.replace("/patientDashboard/dashboard" as any);
       }
     } catch (error) {
       console.error(error);

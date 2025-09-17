@@ -24,3 +24,4 @@ Phase 3: Data Integration
 Self Notes =>
 add - verify email socket.io reviews redis video call doctor profile management
 test - Appointment System and reset-password route
+update - Appointment model to accept time and check for other Appointments on that time

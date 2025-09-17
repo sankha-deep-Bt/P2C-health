@@ -10,10 +10,10 @@ export const registerSchema = z
       email: z.email("Invalid email"),
       password: z.string().min(6, "Password must be at least 6 characters"),
       confirmPassword: z.string().min(6),
-      specialization: z.string().optional(), // only for doctors
-      phone: z.string().optional(),
-      address: z.string().optional(),
-      isApproved: z.boolean().optional(),
+      // specialization: z.string().optional(), // only for doctors
+      // phone: z.string().optional(),
+      // address: z.string().optional(),
+      // isApproved: z.boolean().optional(),
     }),
   })
   .refine((data) => data.body.password === data.body.confirmPassword, {

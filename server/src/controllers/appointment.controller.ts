@@ -83,14 +83,18 @@ export const deleteAppointment = async (req: AuthRequest, res: Response) => {
   try {
     const { appointmentId } = req.params;
 
-    const appointment = removeAppointment(appointmentId);
+    const appointment = await findAppointmentUsingFilter({
+      _id: appointmentId,
+    });
 
-    if (!appointment)
+    if (!appointment || appointment.length === 0)
       return res.status(404).json({ message: "Appointment not found" });
+
+    await removeAppointment(appointmentId);
 
     return res
       .status(200)
-      .json({ success: true, message: "Appointment cancelled" });
+      .json({ success: true, message: "Appointment deleted" });
   } catch (error) {
     return res.status(500).json({
       message: "Error cancelling appointment",

@@ -4,6 +4,7 @@ import {
   login,
   logout,
   refreshHandler,
+  forgotPassword,
 } from "../controllers/auth.controller";
 
 import {
@@ -21,7 +22,7 @@ router.post("/logout", logout);
 router.get("/refresh", refreshHandler);
 
 //TODO: password functions
-// router.post("/forgot-password", () => {});
+router.post("/forgot-password", forgotPassword);
 // router.post("/reset-password", () => {});
 
 export default router;

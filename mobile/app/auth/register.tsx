@@ -17,9 +17,6 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [specialization, setSpecialization] = useState(""); // doctor only
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -56,9 +53,9 @@ export default function RegisterPage() {
       await AsyncStorage.setItem("token", data.refreshToken);
       await AsyncStorage.setItem("userType", data.userType);
       if (data.userType === "doctor") {
-        router.replace("/doctorDashboard");
+        router.replace("/doctorDashboard" as any);
       } else {
-        router.replace("/patientDashboard");
+        router.replace("/patientDashboard" as any);
       }
     } catch (error) {
       console.error(error);
@@ -125,7 +122,7 @@ export default function RegisterPage() {
       />
 
       {/* Extra doctor fields */}
-      {userType === "doctor" && (
+      {/* {userType === "doctor" && (
         <>
           <TextInput
             style={styles.input}
@@ -148,6 +145,7 @@ export default function RegisterPage() {
           />
         </>
       )}
+     */}
 
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Register</Text>

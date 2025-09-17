@@ -5,7 +5,7 @@ export interface DoctorType {
   name: string;
   email: string;
   password: string;
-  specialization: string;
+  specialization?: string;
   experience?: number;
   qualification?: string;
   bio?: string;
@@ -27,7 +27,7 @@ export interface DoctorDocument extends Document {
   name: string;
   email: string;
   password: string;
-  specialization: string;
+  specialization?: string;
   experience?: number;
   qualification?: string;
   bio?: string;
@@ -56,7 +56,7 @@ const doctorSchema = new mongoose.Schema<DoctorDocument>(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true, minlength: 6 },
-    specialization: { type: String, required: true },
+    specialization: { type: String, required: false },
     experience: { type: Number, required: false },
     qualification: { type: String, required: false },
     bio: { type: String, required: false },
