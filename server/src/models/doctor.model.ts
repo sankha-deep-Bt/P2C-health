@@ -1,11 +1,13 @@
 import mongoose, { Document } from "mongoose";
-import { compareValue, hashValue } from "../utils/bcrypt";
+import crypto from "crypto";
 
 export interface DoctorType {
+  userId: mongoose.Types.ObjectId;
+  uniqueId?: string;
   name: string;
   email: string;
-  password: string;
   specialization?: string;
+  profilePic?: string;
   experience?: number;
   qualification?: string;
   bio?: string;
@@ -23,11 +25,12 @@ export interface DoctorType {
 }
 
 export interface DoctorDocument extends Document {
-  _id: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
+  uniqueId?: string;
   name: string;
   email: string;
-  password: string;
   specialization?: string;
+  profilePic?: string;
   experience?: number;
   qualification?: string;
   bio?: string;
@@ -44,19 +47,25 @@ export interface DoctorDocument extends Document {
   refreshToken?: string;
   createdAt: Date;
   updatedAt: Date;
-  comparePassword(val: string): Promise<boolean>;
-  omitPassword(): Omit<
-    DoctorDocument,
-    "password" | "comparePassword" | "omitPassword"
-  >;
+  // comparePassword(val: string): Promise<boolean>;
+  // omitPassword(): Omit<
+  //   DoctorDocument,
+  //   "password" | "comparePassword" | "omitPassword"
+  // >;
 }
 
 const doctorSchema = new mongoose.Schema<DoctorDocument>(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    uniqueId: { type: String, unique: true },
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true, minlength: 6 },
     specialization: { type: String, required: false },
+    profilePic: { type: String, required: false },
     experience: { type: Number, required: false },
     qualification: { type: String, required: false },
     bio: { type: String, required: false },
@@ -76,23 +85,6 @@ const doctorSchema = new mongoose.Schema<DoctorDocument>(
   },
   { timestamps: true }
 );
-
-doctorSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await hashValue(this.password);
-  next();
-});
-
-/* ---------- Instance Methods ---------- */
-doctorSchema.methods.comparePassword = async function (val: string) {
-  return compareValue(val, this.password);
-};
-
-doctorSchema.methods.omitPassword = function () {
-  const userObj = this.toObject();
-  delete userObj.password;
-  return userObj;
-};
 
 const DoctorModel = mongoose.model<DoctorDocument>("Doctor", doctorSchema);
 

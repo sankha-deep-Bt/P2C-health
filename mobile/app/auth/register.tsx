@@ -12,7 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [userType, setUserType] = useState<"user" | "doctor">("user"); // default: patient(user)
+  const [userType, setUserType] = useState<"patient" | "doctor">("patient"); // default: patient(user)
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,6 +52,7 @@ export default function RegisterPage() {
       Alert.alert("Success", "Account created successfully!");
       await AsyncStorage.setItem("token", data.refreshToken);
       await AsyncStorage.setItem("userType", data.userType);
+      await AsyncStorage.setItem("user", JSON.stringify(data.user));
       if (data.userType === "doctor") {
         router.replace("/doctorDashboard" as any);
       } else {
@@ -72,9 +73,9 @@ export default function RegisterPage() {
         <TouchableOpacity
           style={[
             styles.checkbox,
-            userType === "user" && styles.checkboxSelected,
+            userType === "patient" && styles.checkboxSelected,
           ]}
-          onPress={() => setUserType("user")}
+          onPress={() => setUserType("patient")}
         >
           <Text style={styles.checkboxText}>Patient</Text>
         </TouchableOpacity>

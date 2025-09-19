@@ -1,11 +1,12 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 import { JWT_SECRET, JWT_REFRESH_SECRET } from "../constants/env";
 import { fifteenMinutesFromNow } from "./date";
+import UserModel from "../models/user.model";
 
 // Payload type
 export interface JwtPayload {
   userId: string;
-  email: string;
+  // email: string;
   role: string;
   iat?: number;
   exp?: number;
@@ -23,7 +24,10 @@ export const generateRefreshToken = (payload: JwtPayload): string => {
   return jwt.sign(payload, JWT_REFRESH_SECRET, options);
 };
 
-export const generateTokens = (model: any, payload: JwtPayload) => {
+export const generateTokens = (
+  model: typeof UserModel,
+  payload: JwtPayload
+) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
   return { accessToken, refreshToken };

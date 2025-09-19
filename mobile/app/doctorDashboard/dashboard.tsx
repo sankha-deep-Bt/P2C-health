@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, Image } from "react-native";
+import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import styles from "./styles";
+import { Link, useRouter } from "expo-router";
+import { Button } from "@react-navigation/elements";
 
 export default function DashboardScreen() {
+  const router = useRouter();
   const [user, setUser] = useState<{
     name: string;
     email: string;
-    uniqueId: string;
+    specialization: string;
+    profilePic: string;
   } | null>(null);
 
   useEffect(() => {
@@ -16,7 +20,6 @@ export default function DashboardScreen() {
       const storedUser = await AsyncStorage.getItem("user");
       if (storedUser) {
         setUser(JSON.parse(storedUser));
-        console.log("User data:", JSON.parse(storedUser));
       }
     };
     loadUser();
@@ -39,7 +42,7 @@ export default function DashboardScreen() {
           <View style={{ marginLeft: 12 }}>
             <Text style={styles.profileName}>{user?.name || "Guest User"}</Text>
             <Text style={styles.profileSubtitle}>
-              {user?.uniqueId || "Unique ID"}
+              {user?.specialization || ""}
             </Text>
           </View>
         </View>
@@ -48,7 +51,7 @@ export default function DashboardScreen() {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Icon name="calendar-plus" size={24} color="#007AFF" />
-            <Text style={styles.cardTitle}>Add Report</Text>
+            <Text style={styles.cardTitle}>Complete Profile</Text>
           </View>
         </View>
 
@@ -59,12 +62,14 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Icon name="message" size={24} color="#FF9500" />
-            <Text style={styles.cardTitle}>Chat</Text>
+        <TouchableOpacity onPress={() => router.push("./ChatScreen")}>
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Icon name="message" size={24} color="#FF9500" />
+              <Text style={styles.cardTitle}>Chat</Text>
+            </View>
           </View>
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.card}>
           <View style={styles.cardHeader}>

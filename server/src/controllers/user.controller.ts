@@ -2,6 +2,7 @@
 import { Request, Response } from "express";
 import { AuthRequest } from "../middleware/auth.middleware";
 import { deleteUser, findById, updateUser } from "../services/user.services";
+import { deleteSessionById } from "../models/session.model";
 
 export const getSelfProfile = async (req: AuthRequest, res: Response) => {
   try {
@@ -78,12 +79,15 @@ export const deleteProfile = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // clear session or cookies if applicable
+    await deleteSessionById(userId);
+
     // For mobile apps, no need to clear cookies.
     // Tokens should just be discarded client-side.
 
     return res.status(200).json({
       message: "User deleted successfully",
-      user: deleted.data,
+      user: deleted,
     });
   } catch (error) {
     return res.status(500).json({

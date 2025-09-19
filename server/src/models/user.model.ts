@@ -1,24 +1,26 @@
 import mongoose, { Document } from "mongoose";
 import { compareValue, hashValue } from "../utils/bcrypt";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-  JwtPayload,
-} from "../utils/jwt";
+import crypto from "crypto";
 
 /* ---------- Interfaces ---------- */
 export interface UserType {
   name: string;
+  uniqueId?: string;
   email: string;
   password: string;
+  profilePic?: string;
+  role?: "patient" | "doctor" | "admin" | "base";
   refreshToken?: string;
 }
 
-export interface UserDocument extends Document {
+export interface UserDocument extends Document, UserType {
   _id: mongoose.Types.ObjectId;
+  uniqueId?: string;
   name: string;
   email: string;
   password: string;
+  profilePic?: string;
+  role: "patient" | "doctor" | "admin" | "base";
   refreshToken?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -27,17 +29,34 @@ export interface UserDocument extends Document {
     UserDocument,
     "password" | "comparePassword" | "omitPassword"
   >;
-  // generateAccessToken(payload: JwtPayload): string;
-  // generateRefreshToken(payload: JwtPayload): Promise<string>;
 }
 
-/* ---------- Schema ---------- */
-const userSchema = new mongoose.Schema<UserDocument>(
+function generateUniqueId(role: string): string {
+  let prefix: string;
+  if (role === "doctor") {
+    prefix = "DOC";
+  } else if (role === "patient") {
+    prefix = "PAT";
+  } else {
+    prefix = "ADM";
+  }
+  const randomPart = crypto.randomBytes(3).toString("hex").toUpperCase(); // e.g. A1B2C3
+  const timestampPart = Date.now().toString(36).toUpperCase(); // compact timestamp
+  return `${prefix}-${timestampPart}-${randomPart}`;
+}
+
+/* ---------- Patient Schema ---------- */
+
+/* ---------- User Schema ---------- */
+export const userSchema = new mongoose.Schema<UserDocument>(
   {
     name: { type: String, required: true, trim: true },
+    uniqueId: { type: String, unique: true },
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true, minlength: 6 },
-    refreshToken: { type: String, required: false },
+    profilePic: { type: String },
+    role: { type: String, enum: ["patient", "doctor", "admin"] },
+    refreshToken: { type: String },
   },
   { timestamps: true }
 );
@@ -49,7 +68,14 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-/* ---------- Instance Methods ---------- */
+userSchema.pre("save", async function (next, role) {
+  if (!this.uniqueId) {
+    this.uniqueId = generateUniqueId(this.role);
+  }
+  next();
+});
+
+/* ---------- Methods ---------- */
 userSchema.methods.comparePassword = async function (val: string) {
   return compareValue(val, this.password);
 };
@@ -60,18 +86,6 @@ userSchema.methods.omitPassword = function () {
   return userObj;
 };
 
-// userSchema.methods.generateAccessToken = function (payload: JwtPayload) {
-//   return generateAccessToken(payload);
-// };
-
-// userSchema.methods.generateRefreshToken = async function (payload: JwtPayload) {
-//   const refreshToken = generateRefreshToken(payload);
-//   this.refreshToken = refreshToken;
-//   await this.save();
-//   return refreshToken;
-// };
-
 /* ---------- Model ---------- */
 const UserModel = mongoose.model<UserDocument>("User", userSchema);
-
 export default UserModel;

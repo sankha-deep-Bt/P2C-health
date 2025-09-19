@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode } from "jwt-decode";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,15 +17,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
+    // const BASE_URL = "http://10.0.2.2:3000";
     if (!email || !password) {
       Alert.alert("Error", "Email and password are required");
       return;
     }
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/login", {
+      const BASE_URL = "http://localhost:3000";
+      // const BASE_URL = "http://10.0.2.2:3000";
+      // const BASE_URL = "http://192.168.0.100:3000";
+      const response = await fetch(`${BASE_URL}/api/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ email, password }),
       });
 
@@ -33,22 +40,25 @@ export default function LoginPage() {
         Alert.alert("Login Failed", data.message || "Something went wrong");
         return;
       }
+      await AsyncStorage.setItem("refreshToken", data.refreshToken);
+      await AsyncStorage.setItem("accessToken", data.accessToken);
+      await AsyncStorage.setItem(
+        "userType",
+        jwtDecode<{ role: string }>(data.accessToken).role
+      );
+      const userType = await AsyncStorage.getItem("userType");
 
-      // Save tokens (you could use AsyncStorage or SecureStore)
-      console.log("AccessToken:", data.accessToken);
-      // after successful login
-      await AsyncStorage.setItem("token", data.refreshToken);
-      await AsyncStorage.setItem("userType", data.userType);
+      await AsyncStorage.setItem("user", JSON.stringify(data.user));
 
       Alert.alert("Success", "Login successful!");
 
-      if (data.userType === "doctor") {
+      if (userType === "doctor") {
         router.replace("/doctorDashboard/dashboard" as any);
       } else {
         router.replace("/patientDashboard/dashboard" as any);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Login failed:", error);
       Alert.alert("Error", "Failed to login");
     }
   };

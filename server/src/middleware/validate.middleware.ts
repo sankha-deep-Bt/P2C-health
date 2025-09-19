@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from "express";
 export const registerSchema = z
   .object({
     body: z.object({
-      userType: z.enum(["user", "doctor", "admin"]),
+      userType: z.enum(["base", "doctor", "patient", "admin"]),
       name: z.string().min(2, "Name must be at least 2 characters"),
       email: z.email("Invalid email"),
       password: z.string().min(6, "Password must be at least 6 characters"),

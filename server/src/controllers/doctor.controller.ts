@@ -19,7 +19,7 @@ export const addPatientToDoctor = async (req: AuthRequest, res: Response) => {
     }
 
     const patient = await findById(patientId);
-    if (!patient || patient.role !== "user") {
+    if (!patient || patient.role !== "patient") {
       return res.status(404).json({ message: "Patient not found" });
     }
 

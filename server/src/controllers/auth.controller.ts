@@ -8,6 +8,7 @@ import {
 import {
   createUser,
   findByEmail,
+  findById,
   FoundUser,
   updateUser,
 } from "../services/user.services";
@@ -15,6 +16,7 @@ import UserModel, { UserDocument } from "../models/user.model";
 import DoctorModel, { DoctorDocument } from "../models/doctor.model";
 import { RegisterInput, LoginInput } from "../middleware/validate.middleware";
 import sendPasswordResetEmail from "../utils/nodemailer";
+import { PatientDocument, PatientModel } from "../models/patient.model";
 
 export const register = async (
   req: Request<{}, {}, RegisterInput>,
@@ -23,28 +25,37 @@ export const register = async (
   try {
     const { userType, name, email, password } = req.body;
 
-    let user;
-    let model;
+    const user: UserDocument = await createUser(UserModel, {
+      name,
+      email,
+      password,
+      role: userType,
+    });
+    let uniqueId: string | undefined;
+    let DocUser: DoctorDocument | undefined;
+    let PatUser: PatientDocument | undefined;
+
     if (userType === "doctor") {
-      model = DoctorModel;
-      user = await createUser(model, {
+      DocUser = await createUser(DoctorModel, {
+        userId: user._id,
         name,
         email,
         password,
       });
+      uniqueId = DocUser.uniqueId;
     } else {
-      // userType === "user" or "admin"
-      model = UserModel;
-      user = await createUser(model, {
+      // userType === "user" or "admin" or "patient"
+      PatUser = await createUser(PatientModel, {
+        userId: user._id,
         name,
         email,
         password,
       });
+      uniqueId = PatUser.uniqueId;
     }
 
-    const { accessToken, refreshToken } = generateTokens(model, {
-      userId: user._id.toString(),
-      email: user.email,
+    const { accessToken, refreshToken } = generateTokens(UserModel, {
+      userId: (user as UserDocument)._id.toString(),
       role: userType,
     });
 
@@ -65,6 +76,7 @@ export const register = async (
       user: user.omitPassword(),
       accessToken,
       refreshToken,
+      uniqueId: uniqueId,
     });
   } catch (error) {
     console.error(error);
@@ -82,9 +94,7 @@ export const login = async (
   try {
     const { email, password } = req.body;
 
-    const found = (await findByEmail(email)) as
-      | FoundUser<UserDocument>
-      | FoundUser<DoctorDocument>;
+    const found = (await findByEmail(email)) as FoundUser<UserDocument>;
     if (!found) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -96,16 +106,15 @@ export const login = async (
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
-    let model;
-    if (role === "doctor") {
-      model = DoctorModel;
-    } else {
-      model = UserModel;
-    }
+    // let model;
+    // if (role === "doctor") {
+    //   model = DoctorModel;
+    // } else {
+    //   model = UserModel;
+    // }
 
-    const { accessToken, refreshToken } = generateTokens(model, {
+    const { accessToken, refreshToken } = generateTokens(UserModel, {
       userId: user._id.toString(),
-      email: user.email,
       role,
     });
 
@@ -120,12 +129,13 @@ export const login = async (
       req
     );
     // setAuthCookies({ res, accessToken, refreshToken });
+    // uniqueId: getUniqueId(user._id.toString(), role);
 
     return res.status(200).json({
       message: "Login successful",
       user: user.omitPassword(),
       accessToken,
-      refreshToken,
+      // uniqueId: user.uniqueId,
     });
   } catch (error) {
     console.error(error);
@@ -194,7 +204,7 @@ export const refreshHandler = async (req: Request, res: Response) => {
 
     // Generate new tokens
     const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-      generateTokens(model, cleanPayload);
+      generateTokens(UserModel, cleanPayload);
 
     // Update refresh token in DB (single-device) or in sessions collection (multi-device)
     await updateUser(payload.userId, { refreshToken: newRefreshToken });
@@ -272,9 +282,7 @@ export const resetPassword = async (req: Request, res: Response) => {
   try {
     const { email, oldPassword, newPassword } = req.body;
 
-    const found = (await findByEmail(email)) as
-      | FoundUser<UserDocument>
-      | FoundUser<DoctorDocument>;
+    const found = (await findByEmail(email)) as FoundUser<UserDocument>;
     if (!found) {
       return res.status(404).json({ message: "User not found" });
     }
