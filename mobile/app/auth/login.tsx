@@ -40,22 +40,28 @@ export default function LoginPage() {
         Alert.alert("Login Failed", data.message || "Something went wrong");
         return;
       }
+
       await AsyncStorage.setItem("refreshToken", data.refreshToken);
       await AsyncStorage.setItem("accessToken", data.accessToken);
       await AsyncStorage.setItem(
         "userType",
         jwtDecode<{ role: string }>(data.accessToken).role
       );
+      // await AsyncStorage.setItem(
+      //   "userId",
+      //   jwtDecode<{ userId: string }>(data.refreshToken).userId as string
+      // );
       const userType = await AsyncStorage.getItem("userType");
 
       await AsyncStorage.setItem("user", JSON.stringify(data.user));
+      // console.log("User data stored:", data.user);
 
       Alert.alert("Success", "Login successful!");
 
       if (userType === "doctor") {
         router.replace("/doctorDashboard" as any);
       } else {
-        router.replace("/patientDashboard" as any);
+        router.replace("/patientDashboard/PatientDashboard" as any);
       }
     } catch (error) {
       console.error("Login failed:", error);

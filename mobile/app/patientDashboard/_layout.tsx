@@ -8,7 +8,7 @@ import CustomDrawerContent from "./CustomDrawer";
 // import ChatScreen from "./chat";
 // import ProfileScreen from "./profile";
 import styles from "./styles";
-import DashboardScreen from "./dashboard";
+import DashboardScreen from "./PatientDashboard";
 import ChatScreen from "../Chat/chat";
 
 const Drawer = createDrawerNavigator();

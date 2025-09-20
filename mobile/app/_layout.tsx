@@ -18,7 +18,7 @@ export default function RootLayout() {
         options={{ title: "Login", headerShown: false }}
       />
       <Stack.Screen
-        name="patientDashboard/dashboard"
+        name="patientDashboard/PatientDashboard"
         options={{ title: "Patient", headerShown: false }}
       />
       <Stack.Screen
