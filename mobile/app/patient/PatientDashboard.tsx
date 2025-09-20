@@ -4,12 +4,14 @@ import { useUser } from "@/hooks/useUser";
 import { UserProfile } from "./UserProfile";
 import { PatientDashboardContent } from "./PatientDashboardContents";
 import styles from "./styles";
+import { View, Text } from "react-native";
 
 export default function PatientDashboard() {
   const { user, healthData } = useUser();
 
   return (
     <ScrollView style={styles.container}>
+      {/* <Text>{JSON.stringify(healthData, null, 2)}</Text> */}
       {/* Always show user profile */}
       <UserProfile name={user?.name} uniqueId={user?.uniqueId} />
 

@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import styles from "../patientDashboard/styles";
+import styles from "../patient/styles";
 
 export default function ChatScreen() {
   return (

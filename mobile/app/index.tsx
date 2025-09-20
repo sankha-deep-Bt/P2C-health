@@ -15,9 +15,9 @@ export default function Index() {
 
         if (token && userType) {
           if (userType === "doctor") {
-            setRedirectTo("/doctorDashboard");
+            setRedirectTo("/doctor");
           } else {
-            setRedirectTo("/patientDashboard");
+            setRedirectTo("/patient");
           }
         } else {
           setRedirectTo("/auth/login");

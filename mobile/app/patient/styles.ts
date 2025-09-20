@@ -315,6 +315,13 @@ export default StyleSheet.create({
     borderRadius: 4,
     marginTop: 8,
   },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
   // avatar: {
   //   width: 64,
   //   height: 64,

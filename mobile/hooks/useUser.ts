@@ -179,27 +179,35 @@ export function useUser() {
           return;
         }
         // Fetch health data from backend
-        // replace with your API endpoint
-        const res = await fetch(
-          `http://localhost:3000/api/patients/${userId}/health`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${await AsyncStorage.getItem(
-                "accessToken"
-              )}`,
-            },
-          }
-        );
+        // If health data is found in storage, use it and skip fetching
+        {
+          const res = await fetch(
+            `http://localhost:3000/api/patients/${userId}/health`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${await AsyncStorage.getItem(
+                  "accessToken"
+                )}`,
+              },
+            }
+          );
 
-        if (res.ok) {
-          const data: HealthDataType = await res.json();
-          console.log("Fetched health data:", data);
-          setHealthData(data);
+          if (res.ok) {
+            const data: HealthDataType[] = await res.json();
+            console.log("Fetched health data:", data);
+            if (data.length > 0) {
+              setHealthData(data[0]);
+            } else {
+              setHealthData(null);
+            }
+            console.error("Failed to fetch health data:", res.statusText);
+          }
+
+          // setHealthData(data);
+          return null;
         }
-        console.error("Failed to fetch health data:", res.statusText);
-        return null;
       } catch (err) {
         console.error("Error fetching health data:", err);
       }

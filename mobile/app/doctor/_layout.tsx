@@ -8,8 +8,7 @@ import CustomDrawerContent from "./CustomDrawer";
 // import ChatScreen from "./chat";
 // import ProfileScreen from "./profile";
 import styles from "./styles";
-import DashboardScreen from "./PatientDashboard";
-import ChatScreen from "../Chat/chat";
+import DashboardScreen from "./dashboard";
 
 const Drawer = createDrawerNavigator();
 
@@ -54,19 +53,19 @@ export default function PatientDashboardLayout() {
         }}
       >
         <Drawer.Screen
-          name="dashboard"
+          name=""
           component={DashboardScreen}
           options={{ title: "Dashboard" }}
-        />
-        <Drawer.Screen
-          name="chat"
-          component={ChatScreen}
-          options={{ title: "Chat with Doctor" }}
         />
         {/* <Drawer.Screen
           name="appointments"
           component={AppointmentsScreen}
           options={{ title: "Appointments" }}
+        />
+        <Drawer.Screen
+          name="chat"
+          component={ChatScreen}
+          options={{ title: "Chat with Doctor" }}
         />
         <Drawer.Screen
           name="profile"
