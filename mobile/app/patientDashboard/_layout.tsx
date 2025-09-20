@@ -3,11 +3,13 @@ import { View, Text, ActivityIndicator, StatusBar } from "react-native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import NetInfo from "@react-native-community/netinfo";
 import CustomDrawerContent from "./CustomDrawer";
-import DashboardScreen from "./dashboard";
-import AppointmentsScreen from "./appointments";
-import ChatScreen from "./chat";
-import ProfileScreen from "./profile";
+
+// import AppointmentsScreen from "./appointments";
+// import ChatScreen from "./chat";
+// import ProfileScreen from "./profile";
 import styles from "./styles";
+import DashboardScreen from "./dashboard";
+import ChatScreen from "../Chat/chat";
 
 const Drawer = createDrawerNavigator();
 
@@ -32,7 +34,7 @@ export default function PatientDashboardLayout() {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading patient data...</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -57,20 +59,20 @@ export default function PatientDashboardLayout() {
           options={{ title: "Dashboard" }}
         />
         <Drawer.Screen
+          name="chat"
+          component={ChatScreen}
+          options={{ title: "Chat with Doctor" }}
+        />
+        {/* <Drawer.Screen
           name="appointments"
           component={AppointmentsScreen}
           options={{ title: "Appointments" }}
         />
         <Drawer.Screen
-          name="chat"
-          component={ChatScreen}
-          options={{ title: "Chat with Doctor" }}
-        />
-        <Drawer.Screen
           name="profile"
           component={ProfileScreen}
           options={{ title: "Profile" }}
-        />
+        /> */}
       </Drawer.Navigator>
     </>
   );

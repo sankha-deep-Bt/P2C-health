@@ -53,9 +53,9 @@ export default function LoginPage() {
       Alert.alert("Success", "Login successful!");
 
       if (userType === "doctor") {
-        router.replace("/doctorDashboard/dashboard" as any);
+        router.replace("/doctorDashboard" as any);
       } else {
-        router.replace("/patientDashboard/dashboard" as any);
+        router.replace("/patientDashboard" as any);
       }
     } catch (error) {
       console.error("Login failed:", error);

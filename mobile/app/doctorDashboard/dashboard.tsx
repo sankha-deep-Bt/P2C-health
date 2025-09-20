@@ -4,7 +4,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import styles from "./styles";
 import { Link, useRouter } from "expo-router";
-import { Button } from "@react-navigation/elements";
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -52,6 +51,12 @@ export default function DashboardScreen() {
           <View style={styles.cardHeader}>
             <Icon name="calendar-plus" size={24} color="#007AFF" />
             <Text style={styles.cardTitle}>Complete Profile</Text>
+          </View>
+        </View>
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Icon name="calendar-plus" size={24} color="#007AFF" />
+            <Text style={styles.cardTitle}>File a Report</Text>
           </View>
         </View>
 

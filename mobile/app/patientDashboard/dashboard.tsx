@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, Image } from "react-native";
+import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import styles from "./styles";
+import { useRouter } from "expo-router";
 
 export default function DashboardScreen() {
+  const router = useRouter();
   const [user, setUser] = useState<{
     name: string;
     email: string;
@@ -59,12 +61,14 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Icon name="message" size={24} color="#FF9500" />
-            <Text style={styles.cardTitle}>Chat</Text>
+        <TouchableOpacity onPress={() => router.push("/Chat/chat")}>
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Icon name="message" size={24} color="#FF9500" />
+              <Text style={styles.cardTitle}>Chat</Text>
+            </View>
           </View>
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.card}>
           <View style={styles.cardHeader}>

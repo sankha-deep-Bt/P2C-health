@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack } from "expo-router";
 
 export default function RootLayout() {
@@ -17,11 +18,11 @@ export default function RootLayout() {
         options={{ title: "Login", headerShown: false }}
       />
       <Stack.Screen
-        name="patientDashboard"
+        name="patientDashboard/dashboard"
         options={{ title: "Patient", headerShown: false }}
       />
       <Stack.Screen
-        name="doctorDashboard"
+        name="doctorDashboard/dashboard"
         options={{ title: "Doctor", headerShown: false }}
       />
       {/* <Stack.Screen

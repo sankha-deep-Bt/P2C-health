@@ -38,15 +38,6 @@
             "backgroundColor": "#000000"
           }
         }
-      ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "versionCode": 1,
-            "usesCleartextTraffic": true
-          }
-        }
       ]
     ],
     "experiments": {
