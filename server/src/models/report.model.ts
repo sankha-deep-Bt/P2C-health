@@ -1,8 +1,12 @@
 import mongoose, { Schema } from "mongoose";
 
+// export interface IReportModel extends mongoose.Model<IReport> {
+
+// }
+
 const ReportSchema = new Schema(
   {
-    patientId: { type: Schema.Types.ObjectId, ref: "Patient", required: false },
+    patientId: { type: Schema.Types.ObjectId, ref: "Patient", required: true },
 
     medicalHistory: {
       chiefComplaints: [

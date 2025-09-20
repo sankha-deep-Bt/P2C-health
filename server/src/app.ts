@@ -7,6 +7,8 @@ import authRoutes from "./routes/auth.route";
 import userRoutes from "./routes/user.route";
 import messageRoutes from "./routes/message.route";
 import chatRoutes from "./routes/chat.route";
+import patientRoutes from "./routes/patient.route";
+import doctorRoutes from "./routes/doctor.route";
 import appointmentRoutes from "./routes/appointment.route";
 
 const app = express();
@@ -28,5 +30,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/message", messageRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/appointment", appointmentRoutes);
+app.use("/api/patients", patientRoutes);
+app.use("/api/doctors", doctorRoutes);
 
 export default app;
