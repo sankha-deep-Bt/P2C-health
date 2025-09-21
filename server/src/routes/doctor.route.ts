@@ -3,8 +3,11 @@ import {
   addPatientToDoctor,
   approveDoctor,
 } from "../controllers/doctor.controller";
+import { authenticate } from "../middleware/auth.middleware";
 
 const router = Router();
+
+router.use(authenticate);
 
 router.post("/add-patient", addPatientToDoctor);
 router.post("/doctor-approve", approveDoctor);

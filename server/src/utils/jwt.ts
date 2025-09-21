@@ -1,6 +1,5 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 import { JWT_SECRET, JWT_REFRESH_SECRET } from "../constants/env";
-import { fifteenMinutesFromNow } from "./date";
 import UserModel from "../models/user.model";
 
 // Payload type

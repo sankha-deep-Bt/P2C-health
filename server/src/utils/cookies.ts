@@ -1,5 +1,4 @@
 import { CookieOptions, Response } from "express";
-import { fifteenMinutesFromNow, thirtyDaysFromNow } from "./date";
 import { NODE_ENV } from "../constants/env";
 
 export const ACCESS_TOKEN_NAME = "accessToken";
@@ -17,12 +16,12 @@ const defaults: CookieOptions = {
 
 export const getAccessTokenCookieOptions = (): CookieOptions => ({
   ...defaults,
-  expires: fifteenMinutesFromNow(),
+  expires: new Date(Date.now() + 15 * 60 * 1000),
 });
 
 export const getRefreshTokenCookieOptions = (): CookieOptions => ({
   ...defaults,
-  expires: thirtyDaysFromNow(),
+  expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   path: REFRESH_PATH,
 });
 

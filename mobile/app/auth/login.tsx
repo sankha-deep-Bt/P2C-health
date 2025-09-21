@@ -10,6 +10,7 @@ import {
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
+import { BASE_URL } from "../constants";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,28 +18,31 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-    // const BASE_URL = "http://10.0.2.2:3000";
     if (!email || !password) {
       Alert.alert("Error", "Email and password are required");
       return;
     }
-
     try {
-      const BASE_URL = "http://localhost:3000";
-      // const BASE_URL = "http://10.0.2.2:3000";
-      // const BASE_URL = "http://192.168.0.100:3000";
       const response = await fetch(`${BASE_URL}/api/auth/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      let data: any;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error("Response was not valid JSON");
+      }
+
       if (!response.ok) {
         Alert.alert("Login Failed", data.message || "Something went wrong");
         return;
+      }
+
+      if (!data.refreshToken || !data.accessToken) {
+        throw new Error("Server did not return tokens");
       }
 
       await AsyncStorage.setItem("refreshToken", data.refreshToken);
@@ -47,25 +51,20 @@ export default function LoginPage() {
         "userType",
         jwtDecode<{ role: string }>(data.accessToken).role
       );
-      // await AsyncStorage.setItem(
-      //   "userId",
-      //   jwtDecode<{ userId: string }>(data.refreshToken).userId as string
-      // );
-      const userType = await AsyncStorage.getItem("userType");
-
       await AsyncStorage.setItem("user", JSON.stringify(data.user));
-      // console.log("User data stored:", data.user);
 
       Alert.alert("Success", "Login successful!");
 
+      const userType = await AsyncStorage.getItem("userType");
+      // router.replace(userType === "doctor" ? "/doctor" : "/patient");
       if (userType === "doctor") {
         router.replace("/doctor" as any);
       } else {
-        router.replace("/patient" as any);
+        router.replace("/patient");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
-      Alert.alert("Error", "Failed to login");
+      Alert.alert("Error", error.message || "Failed to login");
     }
   };
 

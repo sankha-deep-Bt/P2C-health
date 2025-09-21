@@ -18,17 +18,17 @@ export default function RootLayout() {
         options={{ title: "Login", headerShown: false }}
       />
       <Stack.Screen
-        name="patientDashboard/PatientDashboard"
+        name="patient/PatientDashboard"
         options={{ title: "Patient", headerShown: false }}
       />
       <Stack.Screen
-        name="doctorDashboard/dashboard"
+        name="doctor/"
         options={{ title: "Doctor", headerShown: false }}
       />
-      {/* <Stack.Screen
-        name="ChatScreen"
+      <Stack.Screen
+        name="chat/ChatScreen"
         options={{ title: "Chat", headerShown: false }}
-      /> */}
+      />
     </Stack>
   );
 }

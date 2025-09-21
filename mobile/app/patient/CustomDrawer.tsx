@@ -5,6 +5,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import styles from "./styles";
+import { BASE_URL } from "../constants";
 
 const navItems = [
   { id: "dashboard", icon: "view-dashboard", title: "Dashboard" },
@@ -17,19 +18,72 @@ export default function CustomDrawerContent(props: any) {
   const { state, navigation } = props;
   const router = useRouter();
 
-  const handleLogout = async () => {
-    try {
-      const token = await AsyncStorage.getItem("token");
+  // const handleLogout = async () => {
+  //   try {
+  //     const token = await AsyncStorage.getItem("refreshToken");
 
-      await fetch(`http://localhost:3000/api/auth/logout`, {
+  //     if (!token) {
+  //       console.log("token not found");
+  //     }
+
+  //     const res = await fetch(`${BASE_URL}/api/auth/logout`, {
+  //       method: "POST",
+  //       headers: {
+  //         // "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+
+  //     const data = await res.json();
+  //     if (!res.ok) {
+  //       const errorData = data || {};
+  //       throw new Error(errorData.message || "Logout failed");
+  //     }
+
+  //     await AsyncStorage.multiRemove([
+  //       "refreshToken",
+  //       "accessToken",
+  //       "userType",
+  //     ]);
+  //     router.replace("/auth/login");
+  //   } catch (err) {
+  //     console.error(err);
+  //     Alert.alert("Error", "Failed to logout. Please try again.");
+  //   }
+  // };
+  const handleLogout = async () => {
+    console.log("Logging out via:", `${BASE_URL}/api/auth/logout`);
+    try {
+      const token = await AsyncStorage.getItem("refreshToken");
+
+      if (!token) {
+        console.log("token not found");
+      }
+
+      const res = await fetch(`${BASE_URL}/api/auth/logout`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
 
-      await AsyncStorage.multiRemove(["token", "userType"]);
+      let data = null;
+      try {
+        data = await res.json(); // try parsing JSON
+      } catch {
+        data = null; // response was empty (e.g., 204 No Content)
+      }
+
+      if (res.status !== 204) {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.message || "Logout failed");
+      }
+
+      await AsyncStorage.multiRemove([
+        "refreshToken",
+        "accessToken",
+        "userType",
+      ]);
       router.replace("/auth/login");
     } catch (err) {
       console.error(err);

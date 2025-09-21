@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BASE_URL } from "@/app/constants";
 
 export interface HealthDataType {
   patientId: string;
@@ -181,18 +182,15 @@ export function useUser() {
         // Fetch health data from backend
         // If health data is found in storage, use it and skip fetching
         {
-          const res = await fetch(
-            `http://localhost:3000/api/patients/${userId}/health`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${await AsyncStorage.getItem(
-                  "accessToken"
-                )}`,
-              },
-            }
-          );
+          const res = await fetch(`${BASE_URL}/api/patients/${userId}/health`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${await AsyncStorage.getItem(
+                "accessToken"
+              )}`,
+            },
+          });
 
           if (res.ok) {
             const data: HealthDataType[] = await res.json();

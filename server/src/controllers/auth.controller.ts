@@ -63,12 +63,7 @@ export const register = async (
       refreshToken: refreshToken,
     });
 
-    await createOrUpdateSession(
-      user._id.toString(),
-      accessToken,
-      refreshToken,
-      req
-    );
+    await createOrUpdateSession(user._id.toString(), refreshToken, req);
     // setAuthCookies({ res, accessToken, refreshToken });
 
     return res.status(201).json({
@@ -122,12 +117,7 @@ export const login = async (
       refreshToken: refreshToken,
     });
 
-    await createOrUpdateSession(
-      user._id.toString(),
-      accessToken,
-      refreshToken,
-      req
-    );
+    await createOrUpdateSession(user._id.toString(), refreshToken, req);
     // setAuthCookies({ res, accessToken, refreshToken });
     // uniqueId: getUniqueId(user._id.toString(), role);
 
@@ -135,6 +125,7 @@ export const login = async (
       message: "Login successful",
       user: user.omitPassword(),
       accessToken,
+      refreshToken,
       // uniqueId: user.uniqueId,
     });
   } catch (error) {
@@ -203,24 +194,21 @@ export const refreshHandler = async (req: Request, res: Response) => {
     }
 
     // Generate new tokens
-    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-      generateTokens(UserModel, cleanPayload);
+    const { accessToken: newAccessToken } = generateTokens(
+      UserModel,
+      cleanPayload
+    );
 
     // Update refresh token in DB (single-device) or in sessions collection (multi-device)
-    await updateUser(payload.userId, { refreshToken: newRefreshToken });
+    await updateUser(payload.userId, { refreshToken });
 
     // Update session store (optional if you want session tracking)
-    await createOrUpdateSession(
-      payload.userId,
-      newAccessToken,
-      newRefreshToken,
-      req
-    );
+    await createOrUpdateSession(payload.userId, refreshToken, req);
 
     return res.status(200).json({
       message: "Token refreshed successfully",
       accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
+      refreshToken,
     });
   } catch (error) {
     console.error(error);
