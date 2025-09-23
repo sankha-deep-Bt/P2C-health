@@ -4,6 +4,7 @@ export interface SessionDocument extends mongoose.Document {
   userId: mongoose.Types.ObjectId;
   refreshToken: string;
   userAgent?: string;
+  ip?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -13,6 +14,7 @@ export type SessionType = {
   userId: string;
   refreshToken: string;
   userAgent?: string;
+  ip?: string;
 };
 
 const sessionSchema = new mongoose.Schema<SessionDocument>(
@@ -22,8 +24,9 @@ const sessionSchema = new mongoose.Schema<SessionDocument>(
       ref: "User",
       required: true,
     },
-    refreshToken: { type: String, required: true },
     userAgent: { type: String },
+    ip: { type: String },
+    refreshToken: { type: String, required: true },
   },
   { timestamps: true }
 );
@@ -55,4 +58,8 @@ export const deleteSessionById = async (userId: string) => {
   return SessionModel.deleteOne({
     userId: new mongoose.Types.ObjectId(userId),
   });
+};
+
+export const deleteSessionByRefreshToken = async (refreshToken: string) => {
+  return SessionModel.deleteOne({ refreshToken });
 };

@@ -1,5 +1,4 @@
 import mongoose, { Document } from "mongoose";
-import crypto from "crypto";
 
 export interface DoctorType {
   userId: mongoose.Types.ObjectId;
@@ -21,7 +20,6 @@ export interface DoctorType {
     startTime: string; // e.g. "09:00"
     endTime: string; // e.g. "17:00"
   }[];
-  refreshToken?: string;
 }
 
 export interface DoctorDocument extends Document {
@@ -44,14 +42,8 @@ export interface DoctorDocument extends Document {
     startTime: string; // e.g. "09:00"
     endTime: string; // e.g. "17:00"
   }[];
-  refreshToken?: string;
   createdAt: Date;
   updatedAt: Date;
-  // comparePassword(val: string): Promise<boolean>;
-  // omitPassword(): Omit<
-  //   DoctorDocument,
-  //   "password" | "comparePassword" | "omitPassword"
-  // >;
 }
 
 const doctorSchema = new mongoose.Schema<DoctorDocument>(
@@ -81,7 +73,6 @@ const doctorSchema = new mongoose.Schema<DoctorDocument>(
     address: { type: String, required: false },
     isApproved: { type: Boolean, default: false },
     patientList: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    refreshToken: { type: String, required: false },
   },
   { timestamps: true }
 );

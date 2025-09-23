@@ -3,12 +3,13 @@ import { generateTokens, verifyToken } from "../utils/jwt";
 import {
   createOrUpdateSession,
   deleteSessionById,
+  deleteSessionByRefreshToken,
 } from "../models/session.model";
-// import { clearAuthCookies, setAuthCookies } from "../utils/cookies";
 import {
   createUser,
   findByEmail,
   findById,
+  findByPhone,
   FoundUser,
   updateUser,
 } from "../services/user.services";
@@ -18,6 +19,19 @@ import { RegisterInput, LoginInput } from "../middleware/validate.middleware";
 import sendPasswordResetEmail from "../utils/nodemailer";
 import { PatientDocument, PatientModel } from "../models/patient.model";
 
+// export const verifyPhone = async (req: Request, res: Response) => {
+//   try {
+//     const { phone } = req.body;
+//     // send sms
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       message: "Error verifying phone number",
+//       error: (error as Error).message,
+//     });
+//   }
+// };
+
 export const register = async (
   req: Request<{}, {}, RegisterInput>,
   res: Response
@@ -25,33 +39,37 @@ export const register = async (
   try {
     const { userType, name, email, password } = req.body;
 
+    const existingUser = await findByEmail(email);
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ message: "User with this email already exists" });
+    }
     const user: UserDocument = await createUser(UserModel, {
       name,
       email,
       password,
       role: userType,
     });
-    let uniqueId: string | undefined;
-    let DocUser: DoctorDocument | undefined;
-    let PatUser: PatientDocument | undefined;
+    // const uniqueId: user.uniqueId;
 
     if (userType === "doctor") {
-      DocUser = await createUser(DoctorModel, {
+      await createUser(DoctorModel, {
         userId: user._id,
         name,
         email,
         password,
+        uniqueId: user.uniqueId,
       });
-      uniqueId = DocUser.uniqueId;
     } else {
       // userType === "user" or "admin" or "patient"
-      PatUser = await createUser(PatientModel, {
+      await createUser(PatientModel, {
         userId: user._id,
         name,
         email,
         password,
+        uniqueId: user.uniqueId,
       });
-      uniqueId = PatUser.uniqueId;
     }
 
     const { accessToken, refreshToken } = generateTokens(UserModel, {
@@ -59,19 +77,21 @@ export const register = async (
       role: userType,
     });
 
-    await updateUser(user._id.toString(), {
-      refreshToken: refreshToken,
-    });
-
-    await createOrUpdateSession(user._id.toString(), refreshToken, req);
+    // await updateUser(user._id.toString(), {
+    //   refreshToken: refreshToken,
+    // });
+    const meta = {
+      userAgent: req.headers["user-agent"],
+      ip: req.ip,
+    };
+    await createOrUpdateSession(user._id.toString(), refreshToken, meta);
     // setAuthCookies({ res, accessToken, refreshToken });
 
     return res.status(201).json({
       message: "Account created successfully",
       user: user.omitPassword(),
-      accessToken,
       refreshToken,
-      uniqueId: uniqueId,
+      accessToken,
     });
   } catch (error) {
     console.error(error);
@@ -96,37 +116,30 @@ export const login = async (
 
     const { role, data: user } = found;
 
-    // Type narrowing ensures TS knows which model is in use
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
-    // let model;
-    // if (role === "doctor") {
-    //   model = DoctorModel;
-    // } else {
-    //   model = UserModel;
-    // }
 
     const { accessToken, refreshToken } = generateTokens(UserModel, {
       userId: user._id.toString(),
       role,
     });
 
-    await updateUser(user._id.toString(), {
-      refreshToken: refreshToken,
-    });
-
-    await createOrUpdateSession(user._id.toString(), refreshToken, req);
-    // setAuthCookies({ res, accessToken, refreshToken });
-    // uniqueId: getUniqueId(user._id.toString(), role);
+    // const newUser = await updateUser(user._id.toString(), {
+    //   refreshToken: refreshToken,
+    // });
+    const meta = {
+      userAgent: req.headers["user-agent"],
+      ip: req.ip,
+    };
+    await createOrUpdateSession(user._id.toString(), refreshToken, meta);
 
     return res.status(200).json({
       message: "Login successful",
       user: user.omitPassword(),
-      accessToken,
       refreshToken,
-      // uniqueId: user.uniqueId,
+      accessToken,
     });
   } catch (error) {
     console.error(error);
@@ -147,14 +160,14 @@ export const logout = async (req: Request, res: Response) => {
     if (!payload) {
       return res.status(400).json({ message: "No refresh token provided " });
     }
-    const user = await updateUser(payload.userId, {
-      refreshToken: "",
-    });
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
+    // const user = await updateUser(payload.userId, {
+    //   refreshToken: "",
+    // });
+
+    const session = await deleteSessionByRefreshToken(refreshToken || "");
+    if (!session) {
+      return res.status(400).json({ message: "Session not found" });
     }
-    await deleteSessionById(payload.userId);
-    // clearAuthCookies(res);
 
     return res.json({ message: "Logged out successfully" });
   } catch (error) {
@@ -178,20 +191,11 @@ export const refreshHandler = async (req: Request, res: Response) => {
     // Verify refresh token
     const payload = verifyToken(refreshToken);
     if (!payload || payload.type !== "refresh") {
-      return res
-        .status(403)
-        .json({ message: "Invalid or expired refresh token" });
+      return res.status(403).json({ message: "Invalid or expired token" });
     }
 
     // Clean payload (remove exp/iat)
     const { exp, iat, ...cleanPayload } = payload;
-
-    let model;
-    if (payload.role === "doctor") {
-      model = DoctorModel;
-    } else {
-      model = UserModel;
-    }
 
     // Generate new tokens
     const { accessToken: newAccessToken } = generateTokens(
@@ -200,10 +204,10 @@ export const refreshHandler = async (req: Request, res: Response) => {
     );
 
     // Update refresh token in DB (single-device) or in sessions collection (multi-device)
-    await updateUser(payload.userId, { refreshToken });
+    // await updateUser(payload.userId, { refreshToken });
 
     // Update session store (optional if you want session tracking)
-    await createOrUpdateSession(payload.userId, refreshToken, req);
+    // await createOrUpdateSession(payload.userId, refreshToken, req);
 
     return res.status(200).json({
       message: "Token refreshed successfully",
@@ -219,35 +223,12 @@ export const refreshHandler = async (req: Request, res: Response) => {
   }
 };
 
-//TODO: Implement email verification using nodemailer or resend
-// export const verifyEmail = async (req: Request, res: Response) => {
-//   try {
-//     const { email } = req.body;
-
-//     const found = (await findByEmail(email)) as
-//       | FoundUser<UserDocument>
-//       | FoundUser<DoctorDocument>;
-//     if (!found) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     return res.status(200).json({ message: "Email is registered" });
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({
-//       message: "Error verifying email",
-//       error: (error as Error).message,
-//     });
-//   }
-// }
-
+//TODO: implement forgotPassword,resetPassword completely
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
 
-    const found = (await findByEmail(email)) as
-      | FoundUser<UserDocument>
-      | FoundUser<DoctorDocument>;
+    const found = (await findByEmail(email)) as FoundUser<UserDocument>;
     if (!found) {
       return res.status(404).json({ message: "User not found" });
     }

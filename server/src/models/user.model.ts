@@ -8,9 +8,10 @@ export interface UserType {
   uniqueId?: string;
   email: string;
   password: string;
+  phoneNumber?: string;
   profilePic?: string;
   role?: "patient" | "doctor" | "admin" | "base";
-  refreshToken?: string;
+  // refreshToken?: string;
 }
 
 export interface UserDocument extends Document, UserType {
@@ -19,9 +20,10 @@ export interface UserDocument extends Document, UserType {
   name: string;
   email: string;
   password: string;
+  phoneNumber?: string;
   profilePic?: string;
   role: "patient" | "doctor" | "admin" | "base";
-  refreshToken?: string;
+  // refreshToken?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(val: string): Promise<boolean>;
@@ -56,7 +58,7 @@ export const userSchema = new mongoose.Schema<UserDocument>(
     password: { type: String, required: true, minlength: 6 },
     profilePic: { type: String },
     role: { type: String, enum: ["patient", "doctor", "admin"] },
-    refreshToken: { type: String },
+    // refreshToken: { type: String },
   },
   { timestamps: true }
 );

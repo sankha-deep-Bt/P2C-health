@@ -1,5 +1,4 @@
 import mongoose, { Document } from "mongoose";
-import crypto from "crypto";
 
 export interface PatientType {
   userId: mongoose.Types.ObjectId;
@@ -61,12 +60,6 @@ export interface PatientDocument extends Document {
   referredBy?: string;
   createdAt: Date;
   updatedAt: Date;
-
-  // comparePassword(val: string): Promise<boolean>;
-  // omitPassword(): Omit<
-  //   PatientDocument,
-  //   "password" | "comparePassword" | "omitPassword"
-  // >;
 }
 
 const PatientSchema = new mongoose.Schema<PatientDocument>({
