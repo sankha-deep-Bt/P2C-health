@@ -4,7 +4,6 @@ import { useUser } from "@/hooks/useUser";
 import { UserProfile } from "./UserProfile";
 import { PatientDashboardContent } from "./PatientDashboardContents";
 import styles from "./styles";
-import { View, Text } from "react-native";
 
 export default function PatientDashboard() {
   const { user, healthData } = useUser();

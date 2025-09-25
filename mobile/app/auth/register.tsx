@@ -57,7 +57,7 @@ export default function RegisterPage() {
       if (data.userType === "doctor") {
         router.replace("/doctorDashboard" as any);
       } else {
-        router.replace("/patientDashboard" as any);
+        router.replace("/patient" as any);
       }
     } catch (error) {
       console.error(error);

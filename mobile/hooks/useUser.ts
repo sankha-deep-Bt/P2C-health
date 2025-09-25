@@ -151,6 +151,7 @@ export function useUser() {
     name: string;
     email: string;
     uniqueId: string;
+    profilePic?: string;
   } | null>(null);
   const [healthData, setHealthData] = useState<HealthDataType | null>(null);
 

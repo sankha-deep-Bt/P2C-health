@@ -17,6 +17,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const getToken = async () => {
+    const token = await AsyncStorage.getItem("accessToken");
+    const userType = await AsyncStorage.getItem("userType");
+    if (token) {
+      if (userType === "doctor") {
+        router.replace("/doctor" as any);
+      } else {
+        router.replace("/patient");
+      }
+    }
+  };
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Email and password are required");
