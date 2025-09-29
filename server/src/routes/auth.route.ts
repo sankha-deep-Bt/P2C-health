@@ -23,7 +23,7 @@ router.post("/logout", logout);
 router.get("/refresh", refreshHandler);
 
 //TODO: password functions
-// router.post("/forgot-password", forgotPassword);
+router.post("/forgot-password", forgotPassword);
 // router.post("/reset-password", resetPassword);
 
 export default router;

@@ -26,7 +26,7 @@ export default function RootLayout() {
         options={{ title: "Doctor", headerShown: false }}
       />
       <Stack.Screen
-        name="chat/ChatScreen"
+        name="chat/ChatListScreen"
         options={{ title: "Chat", headerShown: false }}
       />
     </Stack>

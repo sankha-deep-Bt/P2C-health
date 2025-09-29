@@ -94,7 +94,7 @@ export const findByPhone = async <T extends Document>(
 
 export const updateUser = async <T extends Document>(
   id: string,
-  data: Partial<UserType>
+  data: Partial<UserType | DoctorType | PatientType>
 ): Promise<FoundUser<T> | null> => {
   // 1. Update the base User first
   const updatedBase = await UserModel.findByIdAndUpdate(id, data, {

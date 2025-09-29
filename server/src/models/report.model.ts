@@ -6,7 +6,11 @@ import mongoose, { Schema } from "mongoose";
 
 const ReportSchema = new Schema(
   {
-    patientId: { type: Schema.Types.ObjectId, ref: "Patient", required: true },
+    patientId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Patient",
+      required: true,
+    },
 
     medicalHistory: {
       chiefComplaints: [

@@ -118,13 +118,35 @@ export default function PatientLayout() {
       />
 
       <Drawer.Screen
-        name="MedicalHistory"
-        component={require("./forms/MedicalHistory").default}
+        name="MedicalCondition"
+        component={require("./forms/MedicalCondition").default}
         initialParams={{ patientId }}
         options={{
-          title: "Medical History",
+          title: "Medical Conditions",
           drawerIcon: ({ color, size }) => (
             <Icon name="file-document" size={size} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="ChatListScreen"
+        component={require("../chat/ChatListScreen").default}
+        initialParams={{ patientId }}
+        options={{
+          title: "Chat",
+          drawerIcon: ({ color, size }) => (
+            <Icon name="chat" size={size} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="AppointmentsScreen"
+        component={require("../appointment/AppointmentScreen").default}
+        initialParams={{ patientId }}
+        options={{
+          title: "Appointments",
+          drawerIcon: ({ color, size }) => (
+            <Icon name="calendar" size={size} color={color} />
           ),
         }}
       />
