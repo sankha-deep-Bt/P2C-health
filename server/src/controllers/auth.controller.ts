@@ -6,44 +6,38 @@ import {
   deleteSessionByRefreshToken,
 } from "../models/session.model";
 import {
+  createCode,
   createUser,
   findByEmail,
   findById,
   findByPhone,
   FoundUser,
   updateUser,
+  verifyCode,
 } from "../services/user.services";
 import UserModel, { UserDocument } from "../models/user.model";
 import DoctorModel, { DoctorDocument } from "../models/doctor.model";
 import { RegisterInput, LoginInput } from "../middleware/validate.middleware";
-import sendPasswordResetEmail from "../utils/nodemailer";
-import { PatientDocument, PatientModel } from "../models/patient.model";
-
-// export const verifyPhone = async (req: Request, res: Response) => {
-//   try {
-//     const { phone } = req.body;
-//     // send sms
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({
-//       message: "Error verifying phone number",
-//       error: (error as Error).message,
-//     });
-//   }
-// };
+import { sendEmail } from "../utils/nodemailer";
+import { PatientModel } from "../models/patient.model";
 
 export const register = async (
   req: Request<{}, {}, RegisterInput>,
   res: Response
 ) => {
   try {
-    const { userType, name, email, password } = req.body;
+    const { userType, name, email, password, verificationCode } = req.body;
 
     const existingUser = await findByEmail(email);
     if (existingUser) {
       return res
         .status(400)
         .json({ message: "User with this email already exists" });
+    }
+    const verify = await verifyCode(verificationCode);
+
+    if (!verify) {
+      return res.status(400).json({ message: "Invalid verification code" });
     }
     const user: UserDocument = await createUser(UserModel, {
       name,
@@ -179,6 +173,23 @@ export const logout = async (req: Request, res: Response) => {
   }
 };
 
+export const createVerificationCode = async (req: Request, res: Response) => {
+  try {
+    const { email, phone } = req.body;
+
+    const code = await createCode(email, phone);
+    return res
+      .status(200)
+      .json({ message: "Verification code created successfully", code });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Error creating verification code",
+      error: (error as Error).message,
+    });
+  }
+};
+
 export const refreshHandler = async (req: Request, res: Response) => {
   try {
     const refreshToken =
@@ -223,7 +234,6 @@ export const refreshHandler = async (req: Request, res: Response) => {
   }
 };
 
-//TODO: implement forgotPassword,resetPassword completely
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
@@ -234,7 +244,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     }
 
     //TODO: Implement email service to send reset link
-    await sendPasswordResetEmail(email);
+    await sendEmail(email, "reset");
     return res
       .status(200)
       .json({ message: "Password reset link has been sent to your email" });

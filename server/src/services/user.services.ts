@@ -1,8 +1,9 @@
 import { Document, Model } from "mongoose";
 import UserModel, { UserType } from "../models/user.model";
 import DoctorModel, { DoctorType } from "../models/doctor.model";
-import sendPasswordResetEmail from "../utils/nodemailer";
+import sendPasswordResetEmail, { sendEmail } from "../utils/nodemailer";
 import { PatientModel, PatientType } from "../models/patient.model";
+import { VerificationCodeModel } from "../models/verificationCode.model";
 
 /* ---------- Generic Service Functions ---------- */
 
@@ -127,4 +128,20 @@ export const updateUser = async <T extends Document>(
 
   // 3. If admin or other roles
   return { role: "base" as const, data: updatedBase as T };
+};
+
+export const createCode = async (email: string, phone: string) => {
+  const code = Math.floor(Math.random() * 1000000).toString();
+  await VerificationCodeModel.create({ email, phone, code });
+  await sendEmail(email, code);
+};
+
+export const verifyCode = async (code: string) => {
+  const existingCode = await VerificationCodeModel.findOne({ code });
+
+  if (!existingCode) {
+    return false;
+  }
+
+  return true;
 };

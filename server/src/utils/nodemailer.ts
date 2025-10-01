@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } from "../constants/env";
 
-export const sendPasswordResetEmail = async (to: string) => {
+export const sendEmail = async (to: string, subject: string) => {
   const transporter = nodemailer.createTransport({
     host: SMTP_HOST,
     port: Number(SMTP_PORT) || 587,
@@ -12,12 +12,21 @@ export const sendPasswordResetEmail = async (to: string) => {
       pass: SMTP_PASS,
     },
   });
-
+  let text = "";
+  if (subject === "verify") {
+    subject = "Email Verification";
+    text =
+      "Click the link below to verify your email:\n\nhttp://example.com/verify-email";
+  } else if (subject === "reset") {
+    subject = "Password Reset Request";
+    text =
+      "Click the link below to reset your password:\n\nhttp://example.com/reset-password";
+  }
   const info = await transporter.sendMail({
     from: `"P2C Health" <${SMTP_USER}>`,
     to: to,
-    subject: "Password Reset Request",
-    text: "Click the link below to reset your password:\n\nhttp://example.com/reset-password",
+    subject: subject,
+    text: text,
     html: `<!DOCTYPE html>
   <html>
     <head>
@@ -95,4 +104,4 @@ export const sendPasswordResetEmail = async (to: string) => {
 // Preview only available when sending through an Ethereal account
 //   console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 
-export default sendPasswordResetEmail;
+export default sendEmail;
