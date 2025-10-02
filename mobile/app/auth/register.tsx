@@ -55,9 +55,9 @@ export default function RegisterPage() {
       await AsyncStorage.setItem("userType", data.userType);
       await AsyncStorage.setItem("user", JSON.stringify(data.user));
       if (data.userType === "doctor") {
-        router.replace("/doctorDashboard" as any);
+        router.replace("/doctor");
       } else {
-        router.replace("/patient" as any);
+        router.replace("/patient");
       }
     } catch (error) {
       console.error(error);

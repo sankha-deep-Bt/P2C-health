@@ -9,6 +9,8 @@ const router = Router();
 
 router.use(authenticate);
 
+// router.get("/get-doctors", getDoctors);
+
 router.post("/add-patient", addPatientToDoctor);
 router.post("/doctor-approve", approveDoctor);
 

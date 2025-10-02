@@ -22,7 +22,7 @@ export default function RootLayout() {
         options={{ title: "Patient", headerShown: false }}
       />
       <Stack.Screen
-        name="doctor/"
+        name="doctor/DoctorDashboard"
         options={{ title: "Doctor", headerShown: false }}
       />
       <Stack.Screen

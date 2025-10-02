@@ -22,7 +22,7 @@ export default function LoginPage() {
     const userType = await AsyncStorage.getItem("userType");
     if (token) {
       if (userType === "doctor") {
-        router.replace("/doctor" as any);
+        router.replace("/doctor");
       } else {
         router.replace("/patient");
       }
@@ -68,9 +68,9 @@ export default function LoginPage() {
       Alert.alert("Success", "Login successful!");
 
       const userType = await AsyncStorage.getItem("userType");
-      // router.replace(userType === "doctor" ? "/doctor" : "/patient");
+
       if (userType === "doctor") {
-        router.replace("/doctor" as any);
+        router.replace("/doctor");
       } else {
         router.replace("/patient");
       }

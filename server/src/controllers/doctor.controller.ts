@@ -3,6 +3,17 @@ import { AuthRequest } from "../middleware/auth.middleware";
 import { findById, updateUser, FoundUser } from "../services/user.services";
 import { DoctorDocument, DoctorType } from "../models/doctor.model";
 
+// export const getDoctors = async (req: AuthRequest, res: Response) => {
+//   try {
+//     const doctors = await findDoctors();
+//     return res.status(200).json({ success: true, data: doctors });
+//   } catch (error) {
+//     return res.status(500).json({
+//       message: "Error fetching doctors",
+//       error: (error as Error).message,
+//     });
+//   }
+// }
 export const addPatientToDoctor = async (req: AuthRequest, res: Response) => {
   try {
     const doctorId = req.user?.userId;

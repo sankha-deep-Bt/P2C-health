@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -8,50 +9,74 @@ import {
   ActivityIndicator,
   Image,
 } from "react-native";
+import { BASE_URL } from "../constants";
 
 type Chat = {
   id: string;
-  name: string; // user or doctor name
+  name: string;
   lastMessage: string;
   timestamp: string;
-  profilePic?: string; // optional profile picture URL
+  profilePic?: string;
+};
+
+type Doctor = {
+  id: string;
+  name: string;
+  specialty: string;
+  profilePic?: string;
 };
 
 export default function ChatListScreen({ navigation }: any) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDoctors, setShowDoctors] = useState(false);
 
-  // mock fetch chats (replace with API later)
+  const fallbackDoctors: Doctor[] = [
+    {
+      id: "101",
+      name: "Dr. Sharma",
+      specialty: "Cardiologist",
+      profilePic: "https://randomuser.me/api/portraits/men/32.jpg",
+    },
+    {
+      id: "102",
+      name: "Dr. Singh",
+      specialty: "General Physician",
+      profilePic: "https://randomuser.me/api/portraits/men/44.jpg",
+    },
+    {
+      id: "103",
+      name: "Dr. Patel",
+      specialty: "Dermatologist",
+      profilePic: "https://randomuser.me/api/portraits/women/65.jpg",
+    },
+  ];
+
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        // TODO: Replace this with API call
-        const mockData: Chat[] = [
-          {
-            id: "1",
-            name: "Dr. Sharma",
-            lastMessage: "See you next week!",
-            timestamp: "2025-09-25 14:30",
-            profilePic: "https://randomuser.me/api/portraits/men/32.jpg",
+        const response = await fetch(`${BASE_URL}/api/chat`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${await AsyncStorage.getItem(
+              "accessToken"
+            )}`,
           },
-          {
-            id: "2",
-            name: "Dr. Singh",
-            lastMessage: "Take the medicine regularly",
-            timestamp: "2025-09-24 18:10",
-            profilePic: "https://randomuser.me/api/portraits/men/44.jpg",
-          },
-          {
-            id: "3",
-            name: "Dr. Patel",
-            lastMessage: "How are you feeling today?",
-            timestamp: "2025-09-23 09:15",
-            profilePic: "https://randomuser.me/api/portraits/women/65.jpg",
-          },
-        ];
-        setChats(mockData);
+        });
+
+        if (!response.ok) throw new Error(`Failed to fetch chats`);
+
+        const data = await response.json();
+        if (data.length > 0) {
+          setChats(data);
+          setShowDoctors(false);
+        } else {
+          setShowDoctors(true);
+        }
       } catch (err) {
         console.error("Error fetching chats", err);
+        setShowDoctors(true); // fallback to doctor list if fetch fails
       } finally {
         setLoading(false);
       }
@@ -73,7 +98,7 @@ export default function ChatListScreen({ navigation }: any) {
           source={{
             uri:
               item.profilePic ||
-              "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", // fallback avatar
+              "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
           }}
           style={styles.avatar}
         />
@@ -95,6 +120,31 @@ export default function ChatListScreen({ navigation }: any) {
     </Pressable>
   );
 
+  const renderDoctorItem = ({ item }: { item: Doctor }) => (
+    <Pressable
+      style={({ pressed }) => [
+        styles.chatItem,
+        { backgroundColor: pressed ? "#f0f0f0" : "#fff" },
+      ]}
+      onPress={() => navigation.navigate("ChatScreen", { doctorId: item.id })}
+    >
+      <View style={styles.chatRow}>
+        <Image
+          source={{
+            uri:
+              item.profilePic ||
+              "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+          }}
+          style={styles.avatar}
+        />
+        <View style={styles.chatTextContainer}>
+          <Text style={styles.chatName}>{item.name}</Text>
+          <Text style={styles.chatMessage}>{item.specialty}</Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -103,13 +153,41 @@ export default function ChatListScreen({ navigation }: any) {
     );
   }
 
+  // return (
+  //   <FlatList
+  //     data={showDoctors ? fallbackDoctors : chats}
+  //     keyExtractor={(item: any) => item.id}
+  //     renderItem={showDoctors ? renderDoctorItem : renderChatItem}
+  //     contentContainerStyle={styles.list}
+  //     ItemSeparatorComponent={() => <View style={styles.separator} />}
+  //     ListHeaderComponent={
+  //       showDoctors ? (
+  //         <Text style={styles.headerText}>
+  //           No chats yet. Start a conversation with a doctor:
+  //         </Text>
+  //       ) : undefined
+  //     }
+  //   />
+  // );
+  // type Chat | Doctor = Chat | Doctor;
   return (
     <FlatList
-      data={chats}
-      keyExtractor={(item) => item.id}
-      renderItem={renderChatItem}
+      data={
+        showDoctors
+          ? fallbackDoctors
+          : chats.map((item: Chat | Doctor) => item as Chat)
+      }
+      keyExtractor={(item: Chat | Doctor) => item.id}
+      renderItem={({ item }: { item: Chat }) => renderChatItem({ item })}
       contentContainerStyle={styles.list}
       ItemSeparatorComponent={() => <View style={styles.separator} />}
+      ListHeaderComponent={
+        showDoctors ? (
+          <Text style={styles.headerText}>
+            No chats yet. Start a conversation with a doctor:
+          </Text>
+        ) : undefined
+      }
     />
   );
 }
@@ -161,5 +239,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  headerText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#444",
+    marginBottom: 10,
   },
 });
