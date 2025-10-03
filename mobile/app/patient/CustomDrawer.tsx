@@ -63,6 +63,7 @@ export default function CustomDrawerContent(props: any) {
       const res = await fetch(`${BASE_URL}/api/auth/logout`, {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });

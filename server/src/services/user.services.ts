@@ -56,7 +56,7 @@ export const findByEmail = async <T extends Document>(
 
   for (const [role, model] of models) {
     const user = await model.findOne({ email }).exec();
-    if (user) return { role, data: user };
+    if (user) return { role: user.role, data: user };
   }
 
   return null;

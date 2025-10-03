@@ -61,7 +61,7 @@ export default function CustomDrawerContent(props: any) {
   return (
     <DrawerContentScrollView {...props} style={styles.drawerContent}>
       <View style={styles.drawerHeader}>
-        <Text style={styles.drawerTitle}>Patient Portal</Text>
+        <Text style={styles.drawerTitle}>Doctor Portal</Text>
       </View>
 
       {state.routeNames.map((name: string, index: number) => (

@@ -10,6 +10,7 @@ import {
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from "../constants";
+import { jwtDecode } from "jwt-decode";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -52,9 +53,14 @@ export default function RegisterPage() {
 
       Alert.alert("Success", "Account created successfully!");
       await AsyncStorage.setItem("token", data.refreshToken);
-      await AsyncStorage.setItem("userType", data.userType);
+      await AsyncStorage.setItem("accessToken", data.accessToken);
+      await AsyncStorage.setItem(
+        "userType",
+        jwtDecode<{ role: string }>(data.refreshToken).role
+      );
+      console.log(data.userType);
       await AsyncStorage.setItem("user", JSON.stringify(data.user));
-      if (data.userType === "doctor") {
+      if (data.user.role === "doctor") {
         router.replace("/doctor");
       } else {
         router.replace("/patient");

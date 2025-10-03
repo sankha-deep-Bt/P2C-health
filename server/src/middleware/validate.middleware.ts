@@ -10,7 +10,7 @@ export const registerSchema = z
       email: z.email("Invalid email"),
       password: z.string().min(6, "Password must be at least 6 characters"),
       confirmPassword: z.string().min(6),
-      verificationCode: z.string(),
+      // verificationCode: z.string(),
       // specialization: z.string().optional(), // only for doctors
       // phone: z.string().optional(),
       // address: z.string().optional(),

@@ -22,7 +22,7 @@ export interface UserDocument extends Document, UserType {
   password: string;
   phoneNumber?: string;
   profilePic?: string;
-  role: "patient" | "doctor" | "admin" | "base";
+  role: "patient" | "doctor" | "admin";
   // refreshToken?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -58,7 +58,6 @@ export const userSchema = new mongoose.Schema<UserDocument>(
     password: { type: String, required: true, minlength: 6 },
     profilePic: { type: String },
     role: { type: String, enum: ["patient", "doctor", "admin"] },
-    // refreshToken: { type: String },
   },
   { timestamps: true }
 );

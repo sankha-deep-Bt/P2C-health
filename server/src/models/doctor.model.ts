@@ -2,7 +2,7 @@ import mongoose, { Document } from "mongoose";
 
 export interface DoctorType {
   userId: mongoose.Types.ObjectId;
-  uniqueId?: string;
+  uniqueId: string;
   name: string;
   email: string;
   specialization?: string;
@@ -24,7 +24,7 @@ export interface DoctorType {
 
 export interface DoctorDocument extends Document {
   userId: mongoose.Types.ObjectId;
-  uniqueId?: string;
+  uniqueId: string;
   name: string;
   email: string;
   specialization?: string;

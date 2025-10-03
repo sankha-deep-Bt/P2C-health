@@ -68,6 +68,7 @@ export default function LoginPage() {
       Alert.alert("Success", "Login successful!");
 
       const userType = await AsyncStorage.getItem("userType");
+      console.log(userType);
 
       if (userType === "doctor") {
         router.replace("/doctor");

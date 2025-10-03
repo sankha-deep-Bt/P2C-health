@@ -26,7 +26,7 @@ export const register = async (
   res: Response
 ) => {
   try {
-    const { userType, name, email, password, verificationCode } = req.body;
+    const { userType, name, email, password } = req.body;
 
     const existingUser = await findByEmail(email);
     if (existingUser) {
@@ -34,11 +34,11 @@ export const register = async (
         .status(400)
         .json({ message: "User with this email already exists" });
     }
-    const verify = await verifyCode(verificationCode);
+    // const verify = await verifyCode(verificationCode);
 
-    if (!verify) {
-      return res.status(400).json({ message: "Invalid verification code" });
-    }
+    // if (!verify) {
+    //   return res.status(400).json({ message: "Invalid verification code" });
+    // }
     const user: UserDocument = await createUser(UserModel, {
       name,
       email,
@@ -67,8 +67,8 @@ export const register = async (
     }
 
     const { accessToken, refreshToken } = generateTokens(UserModel, {
-      userId: (user as UserDocument)._id.toString(),
-      role: userType,
+      userId: user._id.toString(),
+      role: user.role,
     });
 
     // await updateUser(user._id.toString(), {
@@ -120,9 +120,6 @@ export const login = async (
       role,
     });
 
-    // const newUser = await updateUser(user._id.toString(), {
-    //   refreshToken: refreshToken,
-    // });
     const meta = {
       userAgent: req.headers["user-agent"],
       ip: req.ip,
@@ -146,7 +143,6 @@ export const login = async (
 
 export const logout = async (req: Request, res: Response) => {
   try {
-    // const refreshToken = req.cookies?.refreshToken;
     const refreshToken =
       req.cookies?.refreshToken || req.headers.authorization?.split(" ")[1];
     const payload = verifyToken(refreshToken || "");
@@ -154,9 +150,6 @@ export const logout = async (req: Request, res: Response) => {
     if (!payload) {
       return res.status(400).json({ message: "No refresh token provided " });
     }
-    // const user = await updateUser(payload.userId, {
-    //   refreshToken: "",
-    // });
 
     const session = await deleteSessionByRefreshToken(refreshToken || "");
     if (!session) {
