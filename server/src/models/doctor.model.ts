@@ -67,6 +67,7 @@ const doctorSchema = new mongoose.Schema<DoctorDocument>(
         day: { type: String, required: false },
         startTime: { type: String, required: false },
         endTime: { type: String, required: false },
+        _id: false,
       },
     ],
     phone: { type: String, required: false },

@@ -63,21 +63,43 @@ export const findByEmail = async <T extends Document>(
 };
 
 // Find by ID
+// export const findById = async <T extends Document>(
+//   id: string
+// ): Promise<FoundUser<T> | null> => {
+//   const models: [Role, any][] = [
+//     ["base", UserModel],
+//     ["doctor", DoctorModel],
+//     ["patient", PatientModel],
+//   ];
+
+//   for (const [role, model] of models) {
+//     const user = await model.findById(id).exec();
+//     if (user) return { role: user.role, data: user };
+//   }
+
+//   return null;
+// };
+
 export const findById = async <T extends Document>(
   id: string
 ): Promise<FoundUser<T> | null> => {
-  const models: [Role, any][] = [
-    ["base", UserModel],
-    ["doctor", DoctorModel],
-    ["patient", PatientModel],
-  ];
+  // Try base user first
+  const baseUser = await UserModel.findById(id).exec();
+  if (!baseUser) return null;
 
-  for (const [role, model] of models) {
-    const user = await model.findById(id).exec();
-    if (user) return { role, data: user };
+  // If user is a doctor, fetch doctor profile by userId
+  if (baseUser.role === "doctor") {
+    const doctor = await DoctorModel.findOne({ userId: baseUser._id }).exec();
+    return { role: "doctor", data: (doctor || baseUser) as T };
   }
 
-  return null;
+  // If user is a patient, fetch patient profile by userId
+  if (baseUser.role === "patient") {
+    const patient = await PatientModel.findOne({ userId: baseUser._id }).exec();
+    return { role: "patient", data: (patient || baseUser) as T };
+  }
+
+  return { role: baseUser.role, data: baseUser as T };
 };
 
 export const findByPhone = async <T extends Document>(

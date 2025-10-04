@@ -1,7 +1,6 @@
 // utils/auth.ts
+import { BASE_URL } from "@/app/constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const API_URL = "http://localhost:3000/api/auth/refresh";
 
 // Function to refresh access token
 export const refreshAccessToken = async () => {
@@ -13,12 +12,12 @@ export const refreshAccessToken = async () => {
       return null;
     }
 
-    const res = await fetch(API_URL, {
-      method: "POST",
+    const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${refreshToken}`,
       },
-      body: JSON.stringify({ refreshToken }),
     });
 
     if (!res.ok) {

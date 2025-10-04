@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import React from "react";
 
-export default function PatientDashboardIndex() {
+export default function DoctorDashboardIndex() {
   const router = useRouter();
   // Redirect to /dashboard automatically
   React.useEffect(() => {

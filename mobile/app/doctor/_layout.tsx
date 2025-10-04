@@ -70,11 +70,13 @@ export default function PatientLayout() {
 
   React.useEffect(() => {
     const loadDoctorId = async () => {
-      const doctor = await AsyncStorage.getItem("user");
+      const doctor = (await AsyncStorage.getItem("user")) || null;
+      JSON.stringify(doctor);
       if (doctor) {
         try {
           const parsed = JSON.parse(doctor);
           setDoctorId(parsed.id || parsed._id || null);
+          // console.log("parsed.id", parsed._id);
         } catch (e) {
           setDoctorId(null);
         }
@@ -103,31 +105,6 @@ export default function PatientLayout() {
         }}
       />
 
-      {/* Patient Information Form */}
-
-      {/* <Drawer.Screen
-        name="PatientInformation"
-        component={require("./forms/PatientInformation").default}
-        initialParams={{ patientId }}
-        options={{
-          title: "Patient Information",
-          drawerIcon: ({ color, size }) => (
-            <Icon name="file-document" size={size} color={color} />
-          ),
-        }}
-      /> */}
-
-      {/* <Drawer.Screen
-        name="MedicalCondition"
-        component={require("./forms/MedicalCondition").default}
-        initialParams={{ patientId }}
-        options={{
-          title: "Medical Conditions",
-          drawerIcon: ({ color, size }) => (
-            <Icon name="file-document" size={size} color={color} />
-          ),
-        }}
-      /> */}
       <Drawer.Screen
         name="ChatListScreen"
         component={require("../chat/ChatListScreen").default}
