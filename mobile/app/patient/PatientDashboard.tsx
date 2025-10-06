@@ -12,7 +12,11 @@ export default function PatientDashboard() {
     <ScrollView style={styles.container}>
       {/* <Text>{JSON.stringify(healthData, null, 2)}</Text> */}
       {/* Always show user profile */}
-      <UserProfile name={user?.name} uniqueId={user?.uniqueId} />
+      <UserProfile
+        name={user?.name}
+        uniqueId={user?.uniqueId}
+        profilePic={user?.profilePic}
+      />
 
       {/* Show health dashboard content */}
       <PatientDashboardContent

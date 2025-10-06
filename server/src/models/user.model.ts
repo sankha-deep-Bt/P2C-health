@@ -55,6 +55,7 @@ export const userSchema = new mongoose.Schema<UserDocument>(
     name: { type: String, required: true, trim: true },
     uniqueId: { type: String, unique: true },
     email: { type: String, required: true, unique: true, lowercase: true },
+    phoneNumber: { type: String },
     password: { type: String, required: true, minlength: 6 },
     profilePic: { type: String },
     role: { type: String, enum: ["patient", "doctor", "admin"] },

@@ -1,249 +1,288 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useState, useEffect } from "react";
+// import React, { useEffect, useState } from "react";
+// import {
+//   View,
+//   Text,
+//   FlatList,
+//   TouchableOpacity,
+//   ActivityIndicator,
+//   StyleSheet,
+// } from "react-native";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { useNavigation } from "@react-navigation/native";
+// import { BASE_URL } from "../constants";
+
+// const fallbackChats = [
+//   {
+//     _id: "1",
+//     participantName: "Dr. Alice Johnson",
+//     lastMessage: { content: "Please take your medication on time." },
+//   },
+//   {
+//     _id: "2",
+//     participantName: "Dr. Rajesh Kumar",
+//     lastMessage: { content: "Let's schedule your follow-up for next week." },
+//   },
+//   {
+//     _id: "3",
+//     participantName: "Dr. Emily Carter",
+//     lastMessage: { content: "How are you feeling today?" },
+//   },
+// ];
+
+// export default function ChatListScreen() {
+//   const [chats, setChats] = useState<any[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const navigation = useNavigation<any>();
+
+//   useEffect(() => {
+//     fetchChats();
+//   }, []);
+
+//   const fetchChats = async () => {
+//     try {
+//       const token = await AsyncStorage.getItem("accessToken");
+//       const res = await fetch(`${BASE_URL}/api/chat`, {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+
+//       if (!res.ok) throw new Error("Failed to fetch chats");
+
+//       const data = await res.json();
+//       if (data.length > 0) {
+//         // data.forEach((chat: any) => {
+//         //   chat.lastMessage = chat.messages[chat.messages.length - 1];
+//         // });
+//         setChats(data);
+//       } else {
+//         setChats([]);
+//       }
+//     } catch (error) {
+//       console.warn("⚠️ Using fallback chat data:", error);
+//       setChats(fallbackChats);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const renderChatItem = ({ item }: any) => (
+//     <TouchableOpacity
+//       style={styles.chatItem}
+//       onPress={() => navigation.navigate("ChatScreen", { chatId: item._id })}
+//     >
+//       <Text style={styles.chatName}>{item.participantName}</Text>
+//       <Text style={styles.lastMessage} numberOfLines={1}>
+//         {item.lastMessage?.content || "No messages yet"}
+//       </Text>
+//     </TouchableOpacity>
+//   );
+
+//   if (loading) {
+//     return (
+//       <View style={styles.centered}>
+//         <ActivityIndicator size="large" />
+//       </View>
+//     );
+//   }
+
+//   return (
+//     <View style={styles.container}>
+//       {chats.length === 0 ? (
+//         <Text style={styles.noChats}>No chats found</Text>
+//       ) : (
+//         <FlatList
+//           data={chats}
+//           renderItem={renderChatItem}
+//           keyExtractor={(item) => item._id}
+//         />
+//       )}
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: { flex: 1, backgroundColor: "#fff", padding: 16 },
+//   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+//   chatItem: {
+//     paddingVertical: 14,
+//     borderBottomWidth: 1,
+//     borderBottomColor: "#eee",
+//   },
+//   chatName: { fontSize: 16, fontWeight: "bold", color: "#333" },
+//   lastMessage: { fontSize: 14, color: "#888", marginTop: 4 },
+//   noChats: { textAlign: "center", marginTop: 20, color: "#666" },
+// });
+
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   FlatList,
-  Pressable,
-  StyleSheet,
+  TouchableOpacity,
   ActivityIndicator,
-  Image,
+  StyleSheet,
+  TextInput,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons"; // make sure expo-vector-icons is installed
 import { BASE_URL } from "../constants";
 
-type Chat = {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  profilePic?: string;
-};
+const fallbackChats = [
+  {
+    _id: "1",
+    participantName: "Dr. Alice Johnson",
+    lastMessage: { content: "Please take your medication on time." },
+  },
+  {
+    _id: "2",
+    participantName: "Dr. Rajesh Kumar",
+    lastMessage: { content: "Let's schedule your follow-up for next week." },
+  },
+  {
+    _id: "3",
+    participantName: "Dr. Emily Carter",
+    lastMessage: { content: "How are you feeling today?" },
+  },
+];
 
-type Doctor = {
-  id: string;
-  name: string;
-  specialty: string;
-  profilePic?: string;
-};
-
-export default function ChatListScreen({ navigation }: any) {
-  const [chats, setChats] = useState<Chat[]>([]);
+export default function ChatListScreen() {
+  const [chats, setChats] = useState<any[]>([]);
+  const [filteredChats, setFilteredChats] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [showDoctors, setShowDoctors] = useState(false);
-
-  const fallbackDoctors: Doctor[] = [
-    {
-      id: "101",
-      name: "Dr. Sharma",
-      specialty: "Cardiologist",
-      profilePic: "https://randomuser.me/api/portraits/men/32.jpg",
-    },
-    {
-      id: "102",
-      name: "Dr. Singh",
-      specialty: "General Physician",
-      profilePic: "https://randomuser.me/api/portraits/men/44.jpg",
-    },
-    {
-      id: "103",
-      name: "Dr. Patel",
-      specialty: "Dermatologist",
-      profilePic: "https://randomuser.me/api/portraits/women/65.jpg",
-    },
-  ];
+  const navigation = useNavigation<any>();
 
   useEffect(() => {
-    const fetchChats = async () => {
-      try {
-        const response = await fetch(`${BASE_URL}/api/chat`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${await AsyncStorage.getItem(
-              "accessToken"
-            )}`,
-          },
-        });
-
-        if (!response.ok) throw new Error(`Failed to fetch chats`);
-
-        const data = await response.json();
-        if (data.length > 0) {
-          setChats(data);
-          setShowDoctors(false);
-        } else {
-          setShowDoctors(true);
-        }
-      } catch (err) {
-        console.error("Error fetching chats", err);
-        setShowDoctors(true); // fallback to doctor list if fetch fails
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchChats();
   }, []);
 
-  const renderChatItem = ({ item }: { item: Chat }) => (
-    <Pressable
-      style={({ pressed }) => [
-        styles.chatItem,
-        { backgroundColor: pressed ? "#f0f0f0" : "#fff" },
-      ]}
-      onPress={() => navigation.navigate("ChatScreen", { chatId: item.id })}
-    >
-      <View style={styles.chatRow}>
-        <Image
-          source={{
-            uri:
-              item.profilePic ||
-              "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-          }}
-          style={styles.avatar}
-        />
-        <View style={styles.chatTextContainer}>
-          <View style={styles.chatHeader}>
-            <Text style={styles.chatName}>{item.name}</Text>
-            <Text style={styles.chatTime}>
-              {new Date(item.timestamp).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </Text>
-          </View>
-          <Text style={styles.chatMessage} numberOfLines={1}>
-            {item.lastMessage}
-          </Text>
-        </View>
-      </View>
-    </Pressable>
-  );
+  const fetchChats = async () => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      const res = await fetch(`${BASE_URL}/api/chat`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  const renderDoctorItem = ({ item }: { item: Doctor }) => (
-    <Pressable
-      style={({ pressed }) => [
-        styles.chatItem,
-        { backgroundColor: pressed ? "#f0f0f0" : "#fff" },
-      ]}
-      onPress={() => navigation.navigate("ChatScreen", { doctorId: item.id })}
+      if (!res.ok) throw new Error("Failed to fetch chats");
+
+      const data = await res.json();
+      if (data.length > 0) {
+        setChats(data);
+        setFilteredChats(data);
+      } else {
+        setChats([]);
+        setFilteredChats([]);
+      }
+    } catch (error) {
+      console.warn("⚠️ Using fallback chat data:", error);
+      setChats(fallbackChats);
+      setFilteredChats(fallbackChats);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (text: string) => {
+    setSearchQuery(text);
+    if (text.trim() === "") {
+      setFilteredChats(chats);
+    } else {
+      const filtered = chats.filter((chat) =>
+        chat.participantName.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredChats(filtered);
+    }
+  };
+
+  const startNewChat = () => {
+    // Placeholder — link this later to your "New Chat" screen
+    alert("Start New Chat — to be implemented!");
+  };
+
+  const renderChatItem = ({ item }: any) => (
+    <TouchableOpacity
+      style={styles.chatItem}
+      onPress={() => navigation.navigate("ChatScreen", { chatId: item._id })}
     >
-      <View style={styles.chatRow}>
-        <Image
-          source={{
-            uri:
-              item.profilePic ||
-              "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-          }}
-          style={styles.avatar}
-        />
-        <View style={styles.chatTextContainer}>
-          <Text style={styles.chatName}>{item.name}</Text>
-          <Text style={styles.chatMessage}>{item.specialty}</Text>
-        </View>
-      </View>
-    </Pressable>
+      <Text style={styles.chatName}>{item.participantName}</Text>
+      <Text style={styles.lastMessage} numberOfLines={1}>
+        {item.lastMessage?.content || "No messages yet"}
+      </Text>
+    </TouchableOpacity>
   );
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007bff" />
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
       </View>
     );
   }
 
-  // return (
-  //   <FlatList
-  //     data={showDoctors ? fallbackDoctors : chats}
-  //     keyExtractor={(item: any) => item.id}
-  //     renderItem={showDoctors ? renderDoctorItem : renderChatItem}
-  //     contentContainerStyle={styles.list}
-  //     ItemSeparatorComponent={() => <View style={styles.separator} />}
-  //     ListHeaderComponent={
-  //       showDoctors ? (
-  //         <Text style={styles.headerText}>
-  //           No chats yet. Start a conversation with a doctor:
-  //         </Text>
-  //       ) : undefined
-  //     }
-  //   />
-  // );
-  // type Chat | Doctor = Chat | Doctor;
   return (
-    <FlatList
-      data={
-        showDoctors
-          ? fallbackDoctors
-          : chats.map((item: Chat | Doctor) => item as Chat)
-      }
-      keyExtractor={(item: Chat | Doctor) => item.id}
-      renderItem={({ item }: { item: Chat }) => renderChatItem({ item })}
-      contentContainerStyle={styles.list}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
-      ListHeaderComponent={
-        showDoctors ? (
-          <Text style={styles.headerText}>
-            No chats yet. Start a conversation with a doctor:
-          </Text>
-        ) : undefined
-      }
-    />
+    <View style={styles.container}>
+      {/* Search Bar */}
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search chats..."
+        value={searchQuery}
+        onChangeText={handleSearch}
+      />
+
+      {/* Chat List */}
+      {filteredChats.length === 0 ? (
+        <Text style={styles.noChats}>No chats found</Text>
+      ) : (
+        <FlatList
+          data={filteredChats}
+          renderItem={renderChatItem}
+          keyExtractor={(item) => item._id}
+        />
+      )}
+
+      {/* Floating Chat Button */}
+      <TouchableOpacity style={styles.fab} onPress={startNewChat}>
+        <Ionicons name="chatbubble-ellipses" size={26} color="#fff" />
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  list: {
+  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
     padding: 10,
+    marginBottom: 12,
+    fontSize: 16,
   },
   chatItem: {
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    elevation: 1,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
-  chatRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    marginRight: 12,
-  },
-  chatTextContainer: {
-    flex: 1,
-  },
-  chatHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  chatName: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  chatTime: {
-    fontSize: 12,
-    color: "#888",
-  },
-  chatMessage: {
-    fontSize: 14,
-    color: "#555",
-    marginTop: 2,
-  },
-  separator: {
-    height: 8,
-  },
-  center: {
-    flex: 1,
+  chatName: { fontSize: 16, fontWeight: "bold", color: "#333" },
+  lastMessage: { fontSize: 14, color: "#888", marginTop: 4 },
+  noChats: { textAlign: "center", marginTop: 20, color: "#666" },
+
+  // Floating Action Button (FAB)
+  fab: {
+    position: "absolute",
+    bottom: 24,
+    right: 24,
+    backgroundColor: "#4a90e2",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
-  },
-  headerText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#444",
-    marginBottom: 10,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
 });

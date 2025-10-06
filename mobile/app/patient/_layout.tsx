@@ -107,7 +107,7 @@ export default function PatientLayout() {
 
       <Drawer.Screen
         name="PatientInformation"
-        component={require("./forms/PatientInformation").default}
+        component={require("./(forms)/PatientInformation").default}
         initialParams={{ patientId }}
         options={{
           title: "Patient Information",
@@ -118,11 +118,11 @@ export default function PatientLayout() {
       />
 
       <Drawer.Screen
-        name="MedicalCondition"
-        component={require("./forms/MedicalCondition").default}
+        name="MedicalReports"
+        component={require("./(forms)/MedicalReports").default}
         initialParams={{ patientId }}
         options={{
-          title: "Medical Conditions",
+          title: "Medical Reports",
           drawerIcon: ({ color, size }) => (
             <Icon name="file-document" size={size} color={color} />
           ),

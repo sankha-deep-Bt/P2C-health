@@ -20,6 +20,7 @@ export const createGroupChat = async (
 export const findUserChats = async (
   userId: string
 ): Promise<ChatDocument[]> => {
+  if (!userId) return [];
   return ChatModel.find({ members: userId })
     .populate("members", "name email")
     .populate("lastMessage")

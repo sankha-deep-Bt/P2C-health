@@ -24,6 +24,7 @@ export default function RootLayout() {
         name="patient/PatientDashboard"
         options={{ title: "Patient", headerShown: false }}
       />
+
       <Stack.Screen
         name="chat/ChatListScreen"
         options={{ title: "Chat", headerShown: false }}

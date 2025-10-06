@@ -12,15 +12,25 @@ cloudinary.config({
   api_secret: CLOUDINARY_API_SECRET,
 });
 
-export const uploadToCloudinary = async (localFilePath: string) => {
+export const uploadToCloudinary = async (
+  localFilePath: string,
+  folder?: string
+) => {
   try {
     if (!localFilePath) return null;
+
     const result = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
+      folder: folder || "uploads",
     });
-    return result;
-  } catch (error) {
+
+    // Clean up after successful upload
     fs.unlinkSync(localFilePath);
+
+    return result;
+  } catch (error: any) {
+    console.error("Cloudinary Upload Error:", error.message || error);
+    if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
     return null;
   }
 };

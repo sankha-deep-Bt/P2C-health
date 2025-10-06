@@ -9,16 +9,21 @@ interface UserProfileProps {
   profilePic?: string;
 }
 
-export const UserProfile: React.FC<UserProfileProps> = ({ name, uniqueId }) => {
+export const UserProfile: React.FC<UserProfileProps> = ({
+  name,
+  uniqueId,
+  profilePic,
+}) => {
   return (
     <Card title="Patient Overview" iconName="👤">
       <View style={{ flexDirection: "row", alignItems: "center" }}>
         <Image
           source={{
             uri:
+              profilePic ||
               "https://ui-avatars.com/api/?name=" +
-              (name || "Guest") +
-              "&background=007AFF&color=fff",
+                (name || "Guest") +
+                "&background=007AFF&color=fff",
           }}
           style={styles.avatar}
         />

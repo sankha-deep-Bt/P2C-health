@@ -62,44 +62,74 @@ export const findByEmail = async <T extends Document>(
   return null;
 };
 
-// Find by ID
 // export const findById = async <T extends Document>(
 //   id: string
 // ): Promise<FoundUser<T> | null> => {
-//   const models: [Role, any][] = [
-//     ["base", UserModel],
-//     ["doctor", DoctorModel],
-//     ["patient", PatientModel],
-//   ];
+//   // Try base user first
+//   const baseUser = await UserModel.findById(id).exec();
+//   if (!baseUser) return null;
 
-//   for (const [role, model] of models) {
-//     const user = await model.findById(id).exec();
-//     if (user) return { role: user.role, data: user };
+//   // If user is a doctor, fetch doctor profile by userId
+//   if (baseUser.role === "doctor") {
+//     const doctor = await DoctorModel.findOne({ userId: baseUser._id }).exec();
+//     return { role: "doctor", data: (doctor || baseUser) as T };
 //   }
 
-//   return null;
+//   // If user is a patient, fetch patient profile by userId
+//   if (baseUser.role === "patient") {
+//     const patient = await PatientModel.findOne({ userId: baseUser._id }).exec();
+//     return { role: "patient", data: (patient || baseUser) as T };
+//   }
+
+//   return { role: baseUser.role, data: baseUser as T };
 // };
 
 export const findById = async <T extends Document>(
   id: string
-): Promise<FoundUser<T> | null> => {
-  // Try base user first
-  const baseUser = await UserModel.findById(id).exec();
+): Promise<{
+  role: "doctor" | "patient" | "base";
+  data: Record<string, any>;
+} | null> => {
+  // 1. Find base user
+  const baseUser = await UserModel.findById(id)
+    .select("-password -__v")
+    .lean()
+    .exec();
   if (!baseUser) return null;
 
-  // If user is a doctor, fetch doctor profile by userId
+  let profile: any = null;
+
+  // 2. Get the extended profile based on role
   if (baseUser.role === "doctor") {
-    const doctor = await DoctorModel.findOne({ userId: baseUser._id }).exec();
-    return { role: "doctor", data: (doctor || baseUser) as T };
+    profile = await DoctorModel.findOne({ userId: id })
+      .select("-_id -__v -password -userId")
+      .lean()
+      .exec();
+  } else if (baseUser.role === "patient") {
+    profile = await PatientModel.findOne({ userId: id })
+      .select("-_id -__v -password -userId")
+      .lean()
+      .exec();
   }
 
-  // If user is a patient, fetch patient profile by userId
-  if (baseUser.role === "patient") {
-    const patient = await PatientModel.findOne({ userId: baseUser._id }).exec();
-    return { role: "patient", data: (patient || baseUser) as T };
-  }
+  // 3. Merge and clean up duplicates
+  const merged = {
+    ...baseUser,
+    ...(profile || {}),
+  };
 
-  return { role: baseUser.role, data: baseUser as T };
+  // Remove unwanted fields
+  delete merged._id;
+  delete merged.password;
+  delete merged.__v;
+  delete merged.createdAt;
+  delete merged.updatedAt;
+  delete merged.userId;
+
+  return {
+    role: baseUser.role as "doctor" | "patient" | "base",
+    data: merged,
+  };
 };
 
 export const findByPhone = async <T extends Document>(
@@ -115,41 +145,94 @@ export const findByPhone = async <T extends Document>(
   return null;
 };
 
+// export const updateUser = async <T extends Document>(
+//   id: string,
+//   data: Partial<UserType | DoctorType | PatientType>
+// ): Promise<FoundUser<T> | null> => {
+//   // 1. Update the base User first
+//   const updatedBase = await UserModel.findByIdAndUpdate(id, data, {
+//     new: true,
+//   });
+//   if (!updatedBase) return null;
+
+//   // 2. Depending on the role, update Doctor/Patient by userId
+//   if (updatedBase.role === "doctor") {
+//     const updatedDoctor = await DoctorModel.findOneAndUpdate(
+//       { userId: id },
+//       data,
+//       { new: true }
+//     );
+//     return updatedDoctor
+//       ? { role: "doctor" as const, data: updatedDoctor as T }
+//       : { role: "base" as const, data: updatedBase as T };
+//   }
+
+//   if (updatedBase.role === "patient") {
+//     const updatedPatient = await PatientModel.findOneAndUpdate(
+//       { userId: id },
+//       data,
+//       { new: true }
+//     );
+//     return updatedPatient
+//       ? { role: "patient" as const, data: updatedPatient as T }
+//       : { role: "base" as const, data: updatedBase as T };
+//   }
+
+//   // 3. If admin or other roles
+//   return { role: "base" as const, data: updatedBase as T };
+// };
+
 export const updateUser = async <T extends Document>(
   id: string,
   data: Partial<UserType | DoctorType | PatientType>
-): Promise<FoundUser<T> | null> => {
-  // 1. Update the base User first
-  const updatedBase = await UserModel.findByIdAndUpdate(id, data, {
+) => {
+  const sanitizedData = { ...data };
+  delete (sanitizedData as any)._id;
+  delete (sanitizedData as any).password;
+  delete (sanitizedData as any).createdAt;
+  delete (sanitizedData as any).updatedAt;
+
+  const updatedBase = await UserModel.findByIdAndUpdate(id, sanitizedData, {
     new: true,
-  });
+    runValidators: true,
+  }).select("-password -__v");
+
   if (!updatedBase) return null;
 
-  // 2. Depending on the role, update Doctor/Patient by userId
+  let updatedProfile: any = null;
+
   if (updatedBase.role === "doctor") {
-    const updatedDoctor = await DoctorModel.findOneAndUpdate(
+    updatedProfile = await DoctorModel.findOneAndUpdate(
       { userId: id },
-      data,
-      { new: true }
-    );
-    return updatedDoctor
-      ? { role: "doctor" as const, data: updatedDoctor as T }
-      : { role: "base" as const, data: updatedBase as T };
+      sanitizedData,
+      { new: true, runValidators: true }
+    ).select("-_id -__v -password -userId");
+  } else if (updatedBase.role === "patient") {
+    updatedProfile = await PatientModel.findOneAndUpdate(
+      { userId: id },
+      sanitizedData,
+      { new: true, runValidators: true }
+    ).select("-_id -__v -password -userId");
   }
 
-  if (updatedBase.role === "patient") {
-    const updatedPatient = await PatientModel.findOneAndUpdate(
-      { userId: id },
-      data,
-      { new: true }
-    );
-    return updatedPatient
-      ? { role: "patient" as const, data: updatedPatient as T }
-      : { role: "base" as const, data: updatedBase as T };
-  }
+  // 🧩 Merge cleanly, remove duplicates
+  const merged = {
+    ...updatedBase.toObject(),
+    ...(updatedProfile?.toObject?.() || {}),
+  };
 
-  // 3. If admin or other roles
-  return { role: "base" as const, data: updatedBase as T };
+  // 🧹 Remove unwanted keys
+  delete merged._id;
+  delete merged.__v;
+  delete merged.password;
+  delete merged.userId;
+  delete merged.createdAt;
+  delete merged.updatedAt;
+
+  return {
+    role: updatedBase.role,
+    user: merged,
+  };
 };
 
 export const createCode = async (email: string, phone: string) => {

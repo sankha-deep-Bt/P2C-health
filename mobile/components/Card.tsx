@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
 type CardProps = {
-  title: string;
+  title?: string;
   children: React.ReactNode;
   iconName?: string; // pass emoji or icon string
 };

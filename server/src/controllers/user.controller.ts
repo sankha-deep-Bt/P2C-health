@@ -3,6 +3,8 @@ import { Request, Response } from "express";
 import { AuthRequest } from "../middleware/auth.middleware";
 import { deleteUser, findById, updateUser } from "../services/user.services";
 import { deleteSessionById } from "../models/session.model";
+import { uploadToCloudinary } from "../utils/cloudinary";
+import fs from "fs";
 
 export const getSelfProfile = async (req: AuthRequest, res: Response) => {
   try {
@@ -38,6 +40,35 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// export const updateProfile = async (req: AuthRequest, res: Response) => {
+//   try {
+//     if (!req.user) {
+//       return res.status(401).json({ message: "Unauthorized" });
+//     }
+
+//     const { userId, role } = req.user;
+//     const updates = req.body;
+//     delete updates._id;
+
+//     // Prevent role changes
+//     if (updates.role && updates.role !== role) {
+//       return res.status(400).json({ message: "Role change is not allowed" });
+//     }
+
+//     const user = await findById(userId);
+//     if (!user) return res.status(404).json({ message: "User not found" });
+
+//     const updatedUser = await updateUser(userId, updates);
+
+//     return res.status(200).json({ updatedUser });
+//   } catch (error) {
+//     return res.status(500).json({
+//       message: "Error updating user",
+//       error: (error as Error).message,
+//     });
+//   }
+// };
+
 export const updateProfile = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -45,11 +76,22 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     }
 
     const { userId, role } = req.user;
-    const updates = req.body;
+    const updates = { ...req.body };
+    delete updates._id;
 
-    // Prevent role changes
+    // Prevent role change
     if (updates.role && updates.role !== role) {
       return res.status(400).json({ message: "Role change is not allowed" });
+    }
+
+    // Handle profile image upload
+    let uploadedImageUrl: string | undefined;
+    if (req.file && req.file.path) {
+      const uploadResult = await uploadToCloudinary(req.file.path);
+      if (uploadResult?.secure_url) {
+        uploadedImageUrl = uploadResult.secure_url;
+        updates.avatar = uploadedImageUrl; // Save URL in DB
+      }
     }
 
     const user = await findById(userId);
@@ -57,12 +99,21 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
 
     const updatedUser = await updateUser(userId, updates);
 
-    return res.status(200).json({ updatedUser });
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      updatedUser,
+    });
   } catch (error) {
+    console.error("Update profile error:", error);
     return res.status(500).json({
       message: "Error updating user",
       error: (error as Error).message,
     });
+  } finally {
+    // Clean up local file if exists (Multer temp file)
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
   }
 };
 

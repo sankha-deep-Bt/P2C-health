@@ -7,7 +7,7 @@ export type PatientType = {
   height?: number;
   weight?: number;
   email?: string;
-  phone?: string;
+  phoneNumber?: string;
   address?: {
     [key: string]: string | undefined;
     line1?: string;

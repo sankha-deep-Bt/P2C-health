@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   ScrollView,
-  Image,
   Alert,
   ActivityIndicator,
   StyleSheet,
@@ -22,10 +21,11 @@ import { BASE_URL } from "@/app/constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function PatientInformationForm({ route }: any) {
-  const emptyPatient = {
+  const emptyPatient: PatientType = {
     name: "",
+    uniqueId: "",
     email: "",
-    phone: "",
+    phoneNumber: "",
     age: 0,
     gender: "male",
     height: undefined,
@@ -40,10 +40,9 @@ export default function PatientInformationForm({ route }: any) {
       postalCode: "",
     },
   };
+
   const { patientId, initialData } = route.params;
-  const [form, setForm] = useState<PatientType | null>(
-    initialData || emptyPatient
-  );
+  const [form, setForm] = useState<PatientType>(initialData || emptyPatient);
   const [loading, setLoading] = useState(!initialData);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
 
@@ -52,64 +51,29 @@ export default function PatientInformationForm({ route }: any) {
       if (!patientId || initialData) return;
       try {
         setLoading(true);
+        const token = await AsyncStorage.getItem("accessToken");
         const res = await fetch(
           `${BASE_URL}/api/patients/${patientId}/patient-info`,
           {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${await AsyncStorage.getItem(
-                "refreshToken"
-              )}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
+
         if (!res.ok) throw new Error("Failed to fetch patient data");
-        const data: PatientType = await res.json();
-        setForm(data);
+        const data = await res.json();
+        setForm(data.data);
       } catch (error: any) {
         Alert.alert("Error", error.message || "Unknown error");
       } finally {
         setLoading(false);
-        return;
       }
     };
     fetchPatient();
   }, [patientId, initialData]);
-
-  const sendForm = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(
-        `${BASE_URL}/api/patients/${patientId}/patient-info`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${await AsyncStorage.getItem(
-              "refreshToken"
-            )}`,
-          },
-          body: JSON.stringify(form),
-        }
-      );
-      if (!res.ok) throw new Error("Failed to update patient data");
-      Alert.alert("Success", "Patient data updated successfully");
-    } catch (error: any) {
-      Alert.alert("Error", error.message || "Unknown error");
-    } finally {
-      setLoading(false);
-      return;
-    }
-  };
-
-  if (loading || !form) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
-    );
-  }
 
   const handleFieldChange = (field: keyof PatientType | string, value: any) => {
     const newForm: PatientType = { ...form };
@@ -134,7 +98,7 @@ export default function PatientInformationForm({ route }: any) {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -180,6 +144,60 @@ export default function PatientInformationForm({ route }: any) {
     }
   };
 
+  const sendForm = async () => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("accessToken");
+      const formData = new FormData();
+
+      // Append form fields
+      Object.entries(form).forEach(([key, value]: [string, any]) => {
+        if (key === "address" && typeof value === "object") {
+          Object.entries(value).forEach(([addrKey, addrValue]) => {
+            formData.append(`address[${addrKey}]`, (addrValue || "") as string);
+          });
+        } else if (key === "avatar" && value?.startsWith("data:image")) {
+          formData.append("avatar", {
+            uri: value,
+            name: "avatar.jpg",
+            type: "image/jpeg",
+          } as any);
+        } else {
+          formData.append(key, String(value ?? ""));
+        }
+      });
+
+      const res = await fetch(
+        `${BASE_URL}/api/patients/${patientId}/patient-info`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to update patient");
+
+      Alert.alert("Success", "Patient data updated successfully");
+    } catch (error: any) {
+      console.error("Error updating patient:", error);
+      Alert.alert("Error", error.message || "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading || !form) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -202,26 +220,17 @@ export default function PatientInformationForm({ route }: any) {
         </View>
 
         {/* Basic Info */}
-        <TextInput
-          style={styles.input}
-          placeholder="Name"
-          value={form.name ?? ""}
-          onChangeText={(v) => handleFieldChange("name", v)}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={form.email ?? ""}
-          onChangeText={(v) => handleFieldChange("email", v)}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Phone"
-          value={form.phone ?? ""}
-          onChangeText={(v) => handleFieldChange("phone", v)}
-        />
+        {["name", "email", "phoneNumber"].map((field) => (
+          <TextInput
+            key={field}
+            style={styles.input}
+            placeholder={field}
+            value={(form as any)[field] ?? ""}
+            onChangeText={(v) => handleFieldChange(field, v)}
+          />
+        ))}
 
-        {/* Address Section */}
+        {/* Address */}
         <Text style={styles.sectionTitle}>Address</Text>
         {["line1", "line2", "city", "district", "postalCode", "state"].map(
           (field) => (
@@ -248,7 +257,6 @@ export default function PatientInformationForm({ route }: any) {
 
         {/* Other Fields */}
         <Text style={styles.sectionTitle}>Age</Text>
-
         <TextInput
           style={styles.input}
           placeholder="Age"
@@ -257,7 +265,7 @@ export default function PatientInformationForm({ route }: any) {
           onChangeText={(v) => handleFieldChange("age", Number(v))}
         />
 
-        {/* Gender Picker */}
+        {/* Gender */}
         <Text style={styles.sectionTitle}>Gender</Text>
         <View style={styles.pickerWrapper}>
           <Picker
@@ -272,47 +280,46 @@ export default function PatientInformationForm({ route }: any) {
           </Picker>
         </View>
 
-        {/* Height with unit selector */}
-        <Text style={styles.sectionTitle}>Height</Text>
-        <View style={styles.row}>
-          <TextInput
-            style={[styles.input, { flex: 1 }]}
-            placeholder="Height"
-            keyboardType="numeric"
-            value={form.height?.toString() ?? ""}
-            onChangeText={(v) => handleFieldChange("height", Number(v))}
-          />
-          <View style={styles.unitPicker}>
-            <Picker
-              selectedValue={form.height || "cm"}
-              onValueChange={(value) => handleFieldChange("heightUnit", value)}
-            >
-              <Picker.Item label="cm" value="cm" />
-              <Picker.Item label="ft" value="ft" />
-            </Picker>
+        {/* Height & Weight */}
+        {["height", "weight"].map((field) => (
+          <View key={field} style={{ marginBottom: 12 }}>
+            <Text style={styles.sectionTitle}>
+              {field.charAt(0).toUpperCase() + field.slice(1)}
+            </Text>
+            <View style={styles.row}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder={field}
+                keyboardType="numeric"
+                value={(form as any)[field]?.toString() ?? ""}
+                onChangeText={(v) => handleFieldChange(field, Number(v))}
+              />
+              <View style={styles.unitPicker}>
+                <Picker
+                  selectedValue={
+                    (form as any)[`${field}Unit`] ||
+                    (field === "height" ? "cm" : "kg")
+                  }
+                  onValueChange={(value) =>
+                    handleFieldChange(`${field}Unit`, value)
+                  }
+                >
+                  {field === "height" ? (
+                    <>
+                      <Picker.Item label="cm" value="cm" />
+                      <Picker.Item label="ft" value="ft" />
+                    </>
+                  ) : (
+                    <>
+                      <Picker.Item label="kg" value="kg" />
+                      <Picker.Item label="lbs" value="lbs" />
+                    </>
+                  )}
+                </Picker>
+              </View>
+            </View>
           </View>
-        </View>
-
-        {/* Weight with unit selector */}
-        <Text style={styles.sectionTitle}>Weight</Text>
-        <View style={styles.row}>
-          <TextInput
-            style={[styles.input, { flex: 1 }]}
-            placeholder="Weight"
-            keyboardType="numeric"
-            value={form.weight?.toString() ?? ""}
-            onChangeText={(v) => handleFieldChange("weight", Number(v))}
-          />
-          <View style={styles.unitPicker}>
-            <Picker
-              selectedValue={form.weight || "kg"}
-              onValueChange={(value) => handleFieldChange("weightUnit", value)}
-            >
-              <Picker.Item label="kg" value="kg" />
-              <Picker.Item label="lbs" value="lbs" />
-            </Picker>
-          </View>
-        </View>
+        ))}
 
         <Button onPress={sendForm} style={styles.sendButton}>
           <Text style={styles.sendButtonText}>Save</Text>
@@ -323,19 +330,9 @@ export default function PatientInformationForm({ route }: any) {
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarContainer: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
+  scrollView: { paddingVertical: 16, paddingHorizontal: 12 },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  avatarContainer: { alignItems: "center", marginBottom: 24 },
   uploadButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -343,11 +340,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  uploadText: {
-    marginLeft: 6,
-    fontSize: 16,
-    color: "#007AFF",
-  },
+  uploadText: { marginLeft: 6, fontSize: 16, color: "#007AFF" },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
@@ -357,11 +350,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontSize: 16,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
+  sectionTitle: { fontSize: 18, fontWeight: "600", marginBottom: 8 },
   locationButton: {
     marginBottom: 12,
     paddingVertical: 12,
@@ -376,39 +365,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#28A745",
   },
-  sendButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-
+  sendButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  row: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   unitPicker: {
     marginLeft: 8,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
-    width: 60, // fixed width
-    height: 60, // fixed height
+    width: 60,
+    height: 60,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f9f9f9",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 12,
-    fontSize: 16,
   },
-
   pickerWrapper: {
     borderWidth: 1,
     borderColor: "#ccc",
@@ -419,21 +388,5 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: "center",
   },
-  squareBox: {
-    width: 12,
-    height: 12,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f9f9f9",
-  },
-
-  picker: {
-    height: 50,
-    color: "#333",
-    fontSize: 16,
-    paddingHorizontal: 10,
-  },
+  picker: { height: 50, color: "#333", fontSize: 16, paddingHorizontal: 10 },
 });
