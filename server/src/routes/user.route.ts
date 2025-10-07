@@ -15,9 +15,7 @@ router.use(authenticate);
 
 router.get("/profile", getSelfProfile);
 router.get("/:id", getProfile);
-
-router.put("/", upload.single("avatar"), updateProfile);
-
+router.put("/", updateProfile);
 router.delete("/", deleteProfile);
 
 export default router;

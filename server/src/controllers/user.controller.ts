@@ -76,7 +76,11 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     }
 
     const { userId, role } = req.user;
+<<<<<<< HEAD
     const updates = { ...req.body };
+=======
+    const updates = req.body;
+>>>>>>> 05ab02db0949493439e248c559f2c713d7d916cf
     delete updates._id;
 
     // Prevent role change
