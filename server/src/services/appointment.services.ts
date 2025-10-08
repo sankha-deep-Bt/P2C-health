@@ -2,12 +2,17 @@ import AppointmentModel from "../models/appointment.model";
 
 export const createAppointment = async (
   doctorId: string,
+  doctorName: string,
   patientId: string,
+  patientName: string,
+  date: Date,
   reason: string
 ) => {
   const appointment = await AppointmentModel.create({
     doctorId,
+    doctorName,
     patientId,
+    patientName,
     date: new Date(),
     reason,
   });

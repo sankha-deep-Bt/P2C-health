@@ -250,3 +250,27 @@ export const verifyCode = async (code: string) => {
 
   return true;
 };
+
+export const findUsers = async (filter: any = {}) => {
+  try {
+    // Apply filter by role if specified
+    if (filter.role === "doctor") {
+      return await DoctorModel.find().lean();
+    } else if (filter.role === "patient") {
+      return await PatientModel.find().lean();
+    }
+
+    // If no role specified, return all users from all models
+    const [users, doctors, patients] = await Promise.all([
+      UserModel.find().lean(),
+      DoctorModel.find().lean(),
+      PatientModel.find().lean(),
+    ]);
+
+    // Combine results
+    return [...users, ...doctors, ...patients];
+  } catch (error) {
+    console.error("Error finding users:", error);
+    throw error;
+  }
+};

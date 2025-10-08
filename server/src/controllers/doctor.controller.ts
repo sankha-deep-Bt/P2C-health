@@ -1,19 +1,38 @@
 import { Request, Response } from "express";
 import { AuthRequest } from "../middleware/auth.middleware";
-import { findById, updateUser, FoundUser } from "../services/user.services";
-import { DoctorDocument, DoctorType } from "../models/doctor.model";
+import { findById, updateUser, findUsers } from "../services/user.services";
+import { DoctorDocument } from "../models/doctor.model";
 
-// export const getDoctors = async (req: AuthRequest, res: Response) => {
-//   try {
-//     const doctors = await findDoctors();
-//     return res.status(200).json({ success: true, data: doctors });
-//   } catch (error) {
-//     return res.status(500).json({
-//       message: "Error fetching doctors",
-//       error: (error as Error).message,
-//     });
-//   }
-// }
+export const getDoctors = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { role } = req.user;
+
+    let users;
+    if (role === "patient") {
+      // Patients can only see doctors
+      users = await findUsers({ role: "doctor" });
+    } else if (role === "doctor") {
+      // Doctors can see all users (doctors + patients)
+      users = await findUsers();
+    } else {
+      // Optional: other roles (like admin)
+      users = await findUsers();
+    }
+
+    return res.status(200).json({ success: true, data: users });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return res.status(500).json({
+      message: "Error fetching users",
+      error: (error as Error).message,
+    });
+  }
+};
+
 export const addPatientToDoctor = async (req: AuthRequest, res: Response) => {
   try {
     const doctorId = req.user?.userId;
@@ -64,8 +83,7 @@ export const approveDoctor = async (req: AuthRequest, res: Response) => {
   try {
     const doctorId = req.user?.userId;
     if (!doctorId) return res.status(401).json({ message: "Unauthorized" });
-    const found: FoundUser<DoctorDocument> | null =
-      await findById<DoctorDocument>(doctorId);
+    const found = await findById(doctorId);
     if (!found || found.role !== "doctor") {
       return res.status(404).json({ message: "Doctor not found" });
     }

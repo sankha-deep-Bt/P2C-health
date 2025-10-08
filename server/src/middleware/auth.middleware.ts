@@ -4,7 +4,6 @@ import { verifyToken, JwtPayload } from "../utils/jwt";
 export interface AuthRequest extends Request {
   user?: {
     userId: string;
-    // email: string;
     role: string;
   };
 }

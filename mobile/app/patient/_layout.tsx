@@ -67,6 +67,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 
 export default function PatientLayout() {
   const [patientId, setPatientId] = React.useState<string | null>(null);
+  const [patientName, setPatientName] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const loadPatientId = async () => {
@@ -75,8 +76,10 @@ export default function PatientLayout() {
         try {
           const parsed = JSON.parse(patient);
           setPatientId(parsed.id || parsed._id || null);
+          setPatientName(parsed.name || null);
         } catch (e) {
           setPatientId(null);
+          setPatientName(null);
         }
       }
     };
@@ -141,8 +144,8 @@ export default function PatientLayout() {
       />
       <Drawer.Screen
         name="AppointmentsScreen"
-        component={require("../appointment/AppointmentScreen").default}
-        initialParams={{ patientId }}
+        component={require("../appointment/DoctorListScreen").default}
+        initialParams={{ patientId, patientName }}
         options={{
           title: "Appointments",
           drawerIcon: ({ color, size }) => (

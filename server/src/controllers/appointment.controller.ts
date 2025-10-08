@@ -10,17 +10,24 @@ import {
 // Patient books an appointment
 export const bookAppointment = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId; // patient
-    const { doctorId, date, reason } = req.body;
+    const patientId = req.user?.userId as string;
+    const { doctorId, doctorName, patientName, date, reason } = req.body;
 
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!patientId) return res.status(401).json({ message: "Unauthorized" });
     if (!doctorId || !date) {
       return res
         .status(400)
         .json({ message: "Doctor ID and Date are required" });
     }
 
-    const appointment = await createAppointment(doctorId, userId, reason);
+    const appointment = await createAppointment(
+      doctorId,
+      doctorName,
+      patientId,
+      patientName,
+      date,
+      reason
+    );
 
     return res.status(201).json({ success: true, data: appointment });
   } catch (error) {
