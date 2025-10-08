@@ -65,7 +65,7 @@ export default function LoginPage() {
       );
       await AsyncStorage.setItem("user", JSON.stringify(data.user));
 
-      Alert.alert("Success", "Login successful!");
+      // Alert.alert("Success", "Login successful!");
 
       const userType = await AsyncStorage.getItem("userType");
       console.log(userType);

@@ -18,80 +18,6 @@ export default function CustomDrawerContent(props: any) {
   const { state, navigation } = props;
   const router = useRouter();
 
-  // const handleLogout = async () => {
-  //   try {
-  //     const token = await AsyncStorage.getItem("refreshToken");
-
-  //     if (!token) {
-  //       console.log("token not found");
-  //     }
-
-  //     const res = await fetch(`${BASE_URL}/api/auth/logout`, {
-  //       method: "POST",
-  //       headers: {
-  //         // "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     });
-
-  //     const data = await res.json();
-  //     if (!res.ok) {
-  //       const errorData = data || {};
-  //       throw new Error(errorData.message || "Logout failed");
-  //     }
-
-  //     await AsyncStorage.multiRemove([
-  //       "refreshToken",
-  //       "accessToken",
-  //       "userType",
-  //     ]);
-  //     router.replace("/auth/login");
-  //   } catch (err) {
-  //     console.error(err);
-  //     Alert.alert("Error", "Failed to logout. Please try again.");
-  //   }
-  // };
-  const handleLogout = async () => {
-    console.log("Logging out via:", `${BASE_URL}/api/auth/logout`);
-    try {
-      const token = await AsyncStorage.getItem("refreshToken");
-
-      if (!token) {
-        console.log("token not found");
-      }
-
-      const res = await fetch(`${BASE_URL}/api/auth/logout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      let data = null;
-      try {
-        data = await res.json(); // try parsing JSON
-      } catch {
-        data = null; // response was empty (e.g., 204 No Content)
-      }
-
-      if (res.status !== 204) {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.message || "Logout failed");
-      }
-
-      await AsyncStorage.multiRemove([
-        "refreshToken",
-        "accessToken",
-        "userType",
-      ]);
-      router.replace("/auth/login");
-    } catch (err) {
-      console.error(err);
-      Alert.alert("Error", "Failed to logout. Please try again.");
-    }
-  };
-
   return (
     <DrawerContentScrollView {...props} style={styles.drawerContent}>
       <View style={styles.drawerHeader}>
@@ -114,17 +40,6 @@ export default function CustomDrawerContent(props: any) {
           labelStyle={styles.drawerLabel}
         />
       ))}
-
-      <View style={styles.drawerFooter}>
-        <DrawerItem
-          label="Logout"
-          onPress={handleLogout}
-          icon={({ color, size }) => (
-            <Icon name="logout" size={size} color={color} />
-          )}
-          labelStyle={[styles.drawerLabel, styles.logoutLabel]}
-        />
-      </View>
     </DrawerContentScrollView>
   );
 }

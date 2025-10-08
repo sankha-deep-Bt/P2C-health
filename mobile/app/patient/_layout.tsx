@@ -18,15 +18,30 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await fetch(` ${BASE_URL}/api/auth/logout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${await AsyncStorage.getItem("accessToken")}`,
-      },
-    });
-    await AsyncStorage.multiRemove(["refreshToken", "accessToken", "userType"]);
-    router.replace("/auth/login");
+    try {
+      const res = await fetch(`${BASE_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${await AsyncStorage.getItem("refreshToken")}`,
+        },
+        body: JSON.stringify({}),
+      });
+      await AsyncStorage.multiRemove([
+        "refreshToken",
+        "accessToken",
+        "userType",
+      ]);
+
+      router.replace("/auth/login");
+      const text = await res.text();
+
+      console.log("Logout response body:", text);
+      console.log("Logout response status:", res.status);
+      console.log("logout headers:", res.headers);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (

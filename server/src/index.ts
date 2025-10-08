@@ -15,11 +15,10 @@ const HOST = "0.0.0.0";
 connectToDatabase()
   .then(() =>
     // app.listen(Number(PORT), HOST, () => {
-    //   // console.log("Server is running on http://192.168.0.100:" + PORT);
-    //   console.log("Server is running on http://" + HOST + ":" + PORT);
+    // console.log("Server is running on http://192.168.0.100:" + PORT);
+    // console.log("Server is running on http://" + HOST + ":" + PORT);
     // })
     app.listen(PORT, () => {
-      // console.log("Server is running on http://192.168.0.100:" + PORT);
       console.log("Server is running on http//localhost:" + PORT);
     })
   )

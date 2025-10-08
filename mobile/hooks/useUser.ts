@@ -195,13 +195,13 @@ export function useUser() {
 
           if (res.ok) {
             const data: HealthDataType[] = await res.json();
-            console.log("Fetched health data:", data);
+            // console.log("Fetched health data:", data);
             if (data.length > 0) {
               setHealthData(data[0]);
             } else {
               setHealthData(null);
             }
-            console.error("Failed to fetch health data:", res.statusText);
+            // console.error("Failed to fetch health data:", res.statusText);
           }
 
           // setHealthData(data);
