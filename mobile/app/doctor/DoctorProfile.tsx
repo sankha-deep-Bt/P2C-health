@@ -67,20 +67,21 @@
 //         const apiResponse = await res.json();
 //         const doctor = apiResponse.data || apiResponse;
 
+//         // adjust structure depending on backend
 //         setUser({
-// name: doctor.user.data.name || "",
-// email: doctor.user.data.email || "",
-// uniqueId: doctor.user.data.uniqueId || "",
-// specialization: doctor.user.data.specialization || "",
-// profilePic: doctor.user.data.profilePic || "",
-// experience: doctor.user.data.experience || 0,
-// qualification: doctor.user.data.qualification || "",
-// bio: doctor.user.data.bio || "",
-// clinicName: doctor.user.data.clinicName || "",
-// phone: doctor.user.data.phone || "",
-// address: doctor.user.data.address || "",
-// availability: doctor.user.data.availability || [],
-// patientList: doctor.user.data.patientList || [],
+//           name: doctor.user.data.name || "",
+//           email: doctor.user.data.email || "",
+//           uniqueId: doctor.user.data.uniqueId || "",
+//           specialization: doctor.user.data.specialization || "",
+//           profilePic: doctor.user.data.profilePic || "",
+//           experience: doctor.user.data.experience || 0,
+//           qualification: doctor.user.data.qualification || "",
+//           bio: doctor.user.data.bio || "",
+//           clinicName: doctor.user.data.clinicName || "",
+//           phone: doctor.user.data.phone || "",
+//           address: doctor.user.data.address || "",
+//           availability: doctor.user.data.availability || [],
+//           patientList: doctor.user.data.patientList || [],
 //         });
 
 //         await AsyncStorage.setItem("user", JSON.stringify(doctor));
@@ -94,38 +95,37 @@
 //     loadUser();
 //   }, []);
 
-//   const handleSaveField = async (
-//     key: keyof DoctorData,
-//     value: string | number
-//   ) => {
+//   const handleSaveAllChanges = async () => {
 //     if (!user) return;
-
-//     const updatedUser = { ...user, [key]: value };
-//     setUser(updatedUser);
-
 //     try {
+//       setLoading(true);
+//       const token = await AsyncStorage.getItem("accessToken");
+
 //       const res = await fetch(`${BASE_URL}/api/user`, {
 //         method: "PUT",
 //         headers: {
 //           "Content-Type": "application/json",
-//           Authorization: `Bearer ${await AsyncStorage.getItem("accessToken")}`,
+//           Authorization: `Bearer ${token}`,
 //         },
-//         body: JSON.stringify({ [key]: value }), // ✅ send updated field
+//         body: JSON.stringify(user),
 //       });
 
-//       if (!res.ok) throw new Error("Failed to update field");
+//       if (!res.ok) throw new Error("Failed to update user");
 
 //       const responseData = await res.json();
 //       await AsyncStorage.setItem(
 //         "user",
-//         JSON.stringify(responseData.data || updatedUser)
+//         JSON.stringify(responseData.data || user)
 //       );
 
+//       Alert.alert("Profile Updated", "Your changes have been saved.");
+//       setIsEditMode(false);
 //       setEditingCard(null);
-//       Alert.alert("Updated", `${key} updated successfully.`);
 //     } catch (error) {
-//       console.error("Error updating field:", error);
+//       console.error("Error updating user:", error);
 //       Alert.alert("Error", "Failed to update profile.");
+//     } finally {
+//       setLoading(false);
 //     }
 //   };
 
@@ -147,14 +147,18 @@
 
 //   return (
 //     <ScrollView style={styles.container}>
-//       {/* Top Edit Profile Button */}
+//       {/* Top Edit / Done Button */}
 //       <View style={styles.topBar}>
 //         <Text style={styles.title}>Doctor Profile</Text>
 //         <TouchableOpacity
 //           style={styles.editToggleButton}
 //           onPress={() => {
-//             setIsEditMode((prev) => !prev);
-//             setEditingCard(null);
+//             if (isEditMode) {
+//               handleSaveAllChanges(); // Save all changes at once
+//             } else {
+//               setIsEditMode(true); // Enter edit mode
+//               setEditingCard(null);
+//             }
 //           }}
 //         >
 //           <Ionicons
@@ -194,7 +198,6 @@
 //                   placeholder="Enter name"
 //                   value={user.name}
 //                   onChangeText={(text) => setUser({ ...user, name: text })}
-//                   onBlur={() => handleSaveField("name", user.name)}
 //                 />
 //                 <TextInput
 //                   style={styles.input}
@@ -202,9 +205,6 @@
 //                   value={user.specialization}
 //                   onChangeText={(text) =>
 //                     setUser({ ...user, specialization: text })
-//                   }
-//                   onBlur={() =>
-//                     handleSaveField("specialization", user.specialization)
 //                   }
 //                 />
 //               </>
@@ -240,14 +240,12 @@
 //               placeholder="Enter clinic name"
 //               value={user.clinicName}
 //               onChangeText={(text) => setUser({ ...user, clinicName: text })}
-//               onBlur={() => handleSaveField("clinicName", user.clinicName)}
 //             />
 //             <TextInput
 //               style={styles.input}
 //               placeholder="Enter address"
 //               value={user.address}
 //               onChangeText={(text) => setUser({ ...user, address: text })}
-//               onBlur={() => handleSaveField("address", user.address)}
 //             />
 //           </>
 //         ) : (
@@ -274,7 +272,6 @@
 //             placeholder="Enter phone number"
 //             value={user.phone}
 //             onChangeText={(text) => setUser({ ...user, phone: text })}
-//             onBlur={() => handleSaveField("phone", user.phone)}
 //           />
 //         ) : (
 //           <Text>{user.phone || "No phone number"}</Text>
@@ -298,9 +295,6 @@
 //               placeholder="Enter qualification"
 //               value={user.qualification}
 //               onChangeText={(text) => setUser({ ...user, qualification: text })}
-//               onBlur={() =>
-//                 handleSaveField("qualification", user.qualification)
-//               }
 //             />
 //             <TextInput
 //               style={styles.input}
@@ -310,7 +304,6 @@
 //               onChangeText={(text) =>
 //                 setUser({ ...user, experience: Number(text) })
 //               }
-//               onBlur={() => handleSaveField("experience", user.experience)}
 //             />
 //           </>
 //         ) : (
@@ -338,7 +331,6 @@
 //             multiline
 //             value={user.bio}
 //             onChangeText={(text) => setUser({ ...user, bio: text })}
-//             onBlur={() => handleSaveField("bio", user.bio)}
 //           />
 //         ) : (
 //           <Text>{user.bio || "No bio available"}</Text>
@@ -374,11 +366,11 @@
 //   editToggleButton: {
 //     flexDirection: "row",
 //     alignItems: "center",
-//     gap: 4,
 //   },
 //   editText: {
 //     color: "#007bff",
 //     fontWeight: "600",
+//     marginLeft: 4,
 //   },
 //   cardHeader: {
 //     flexDirection: "row",

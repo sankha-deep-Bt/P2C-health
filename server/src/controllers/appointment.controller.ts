@@ -6,6 +6,8 @@ import {
   removeAppointment,
   updateAppointmentStatus,
 } from "../services/appointment.services";
+import { findById } from "../services/user.services";
+import DoctorModel from "../models/doctor.model";
 
 // Patient books an appointment
 export const bookAppointment = async (req: AuthRequest, res: Response) => {
@@ -43,15 +45,23 @@ export const bookAppointment = async (req: AuthRequest, res: Response) => {
 export const getAppointments = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
-    const { role } = req.user!; // assume role = "doctor" or "patient"
+    const role = req.user?.role; // "doctor" or "patient"
 
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    let filter: any = {};
-    if (role === "doctor") filter.doctorId = userId;
+    // Use findById to get profile info
+    const doctorProfile = await DoctorModel.findOne({ userId: userId });
+    if (!doctorProfile)
+      return res.status(404).json({ message: "Doctor profile not found" });
+
+    const filter: any = {};
+    if (role === "doctor") filter.doctorId = doctorProfile._id;
     else filter.patientId = userId;
 
     const appointments = await findAppointmentUsingFilter(filter);
+
+    if (!appointments || appointments.length === 0)
+      return res.status(404).json({ message: "Appointments not found" });
 
     return res.status(200).json({ success: true, data: appointments });
   } catch (error) {

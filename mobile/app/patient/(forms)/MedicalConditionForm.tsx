@@ -664,6 +664,69 @@ export default function MedicalConditionForm({
             />
           );
         })}
+        {/* === Past History - Conditions === */}
+        <Text style={styles.sectionTitle}>Past History - Conditions</Text>
+
+        {form.pastHistory.conditions.map((cond, idx) => (
+          <View key={idx} style={styles.card}>
+            <TextInput
+              style={styles.input}
+              placeholder="Condition"
+              value={cond.condition}
+              onChangeText={(text) => {
+                const updated = [...form.pastHistory.conditions];
+                updated[idx].condition = text;
+                setForm({
+                  ...form,
+                  pastHistory: { ...form.pastHistory, conditions: updated },
+                });
+              }}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Date"
+              value={cond.date}
+              onChangeText={(text) => {
+                const updated = [...form.pastHistory.conditions];
+                updated[idx].date = text;
+                setForm({
+                  ...form,
+                  pastHistory: { ...form.pastHistory, conditions: updated },
+                });
+              }}
+            />
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              onPress={() => {
+                const updated = [...form.pastHistory.conditions];
+                updated.splice(idx, 1);
+                setForm({
+                  ...form,
+                  pastHistory: { ...form.pastHistory, conditions: updated },
+                });
+              }}
+            >
+              <Text style={styles.btnText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+        <TouchableOpacity
+          style={styles.addBtn}
+          onPress={() =>
+            setForm({
+              ...form,
+              pastHistory: {
+                ...form.pastHistory,
+                conditions: [
+                  ...form.pastHistory.conditions,
+                  { condition: "", date: "", cured: false },
+                ],
+              },
+            })
+          }
+        >
+          <Text style={styles.btnText}>+ Add Condition</Text>
+        </TouchableOpacity>
         {/* === Documents === */}
         <Text style={styles.sectionTitle}>Documents</Text>
         {["reports", "prescriptions", "photos"].map((field) => (

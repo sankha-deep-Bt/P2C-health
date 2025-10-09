@@ -1,4 +1,5 @@
 import AppointmentModel from "../models/appointment.model";
+import { findById } from "./user.services";
 
 export const createAppointment = async (
   doctorId: string,
@@ -48,7 +49,17 @@ export const removeAppointment = async (appointmentId: string) => {
 };
 
 export const findAppointmentUsingFilter = async (filter: any) => {
-  return AppointmentModel.find(filter)
-    .populate("doctorId", "name email")
-    .populate("patientId", "name email");
+  const appointments = await AppointmentModel.find(filter);
+
+  return Promise.all(
+    appointments.map(async (appt) => {
+      const doctor = await findById(appt.doctorId.toString());
+      const patient = await findById(appt.patientId.toString());
+      return {
+        ...appt.toObject(),
+        doctorId: doctor?.data || null,
+        patientId: patient?.data || null,
+      };
+    })
+  );
 };

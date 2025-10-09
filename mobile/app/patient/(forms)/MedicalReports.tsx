@@ -58,7 +58,7 @@ export default function MedicalReports({ route, navigation }: any) {
     );
   }
 
-  if (!reports.length) {
+  if (!reports || reports.length === 0) {
     return (
       <View style={styles.center}>
         <Text>No medical reports available.</Text>
@@ -83,7 +83,6 @@ export default function MedicalReports({ route, navigation }: any) {
       {/* Add New Report Button */}
       <TouchableOpacity
         style={styles.addReportBtn}
-        // onPress={() => navigation.navigate("MedicalCondition", { patientId })}
         onPress={() => setShowForm(true)}
       >
         <Text style={styles.addReportBtnText}>+ Add New Report</Text>
