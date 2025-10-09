@@ -118,7 +118,7 @@ export default function PatientLayout() {
       />
       <Drawer.Screen
         name="AppointmentsScreen"
-        component={require("../appointment/DoctorListScreen").default}
+        component={require("../appointment/AppointmentScreen").default}
         initialParams={{ doctorId }}
         options={{
           title: "Appointments",

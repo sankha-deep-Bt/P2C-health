@@ -48,18 +48,27 @@ export const removeAppointment = async (appointmentId: string) => {
   await AppointmentModel.findByIdAndDelete(appointmentId);
 };
 
-export const findAppointmentUsingFilter = async (filter: any) => {
-  const appointments = await AppointmentModel.find(filter);
+export const findAppointment = async (
+  userId: string,
+  role: string | undefined
+) => {
+  if (role === "doctor") {
+    const appointments = await AppointmentModel.find({ doctorId: userId });
+    return appointments;
+  } else {
+    const appointments = await AppointmentModel.find({ patientId: userId });
+    return appointments;
+  }
 
-  return Promise.all(
-    appointments.map(async (appt) => {
-      const doctor = await findById(appt.doctorId.toString());
-      const patient = await findById(appt.patientId.toString());
-      return {
-        ...appt.toObject(),
-        doctorId: doctor?.data || null,
-        patientId: patient?.data || null,
-      };
-    })
-  );
+  // return Promise.all(
+  //   appointments.map(async (appt) => {
+  //     const doctor = await findById(appt.doctorId.toString());
+  //     const patient = await findById(appt.patientId.toString());
+  //     return {
+  //       ...appt.toObject(),
+  //       doctorId: doctor?.data || null,
+  //       patientId: patient?.data || null,
+  //     };
+  //   })
+  // );
 };

@@ -595,6 +595,9 @@ const DoctorProfile = () => {
           <Text style={styles.editText}>
             {isEditMode ? "Done" : "Edit Profile"}
           </Text>
+          <Text style={styles.cancelText} onPress={() => setIsEditMode(false)}>
+            {isEditMode ? " Cancel" : ""}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -795,6 +798,11 @@ const styles = StyleSheet.create({
   },
   editText: {
     color: "#007bff",
+    fontWeight: "600",
+    marginLeft: 4,
+  },
+  cancelText: {
+    color: "#ff3300ff",
     fontWeight: "600",
     marginLeft: 4,
   },

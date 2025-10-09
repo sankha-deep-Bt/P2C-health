@@ -4,6 +4,7 @@ import DoctorModel, { DoctorType } from "../models/doctor.model";
 import sendPasswordResetEmail, { sendEmail } from "../utils/nodemailer";
 import { PatientModel, PatientType } from "../models/patient.model";
 import { VerificationCodeModel } from "../models/verificationCode.model";
+import AppointmentModel from "../models/appointment.model";
 
 /* ---------- Generic Service Functions ---------- */
 
@@ -145,43 +146,6 @@ export const findByPhone = async <T extends Document>(
   return null;
 };
 
-// export const updateUser = async <T extends Document>(
-//   id: string,
-//   data: Partial<UserType | DoctorType | PatientType>
-// ): Promise<FoundUser<T> | null> => {
-//   // 1. Update the base User first
-//   const updatedBase = await UserModel.findByIdAndUpdate(id, data, {
-//     new: true,
-//   });
-//   if (!updatedBase) return null;
-
-//   // 2. Depending on the role, update Doctor/Patient by userId
-//   if (updatedBase.role === "doctor") {
-//     const updatedDoctor = await DoctorModel.findOneAndUpdate(
-//       { userId: id },
-//       data,
-//       { new: true }
-//     );
-//     return updatedDoctor
-//       ? { role: "doctor" as const, data: updatedDoctor as T }
-//       : { role: "base" as const, data: updatedBase as T };
-//   }
-
-//   if (updatedBase.role === "patient") {
-//     const updatedPatient = await PatientModel.findOneAndUpdate(
-//       { userId: id },
-//       data,
-//       { new: true }
-//     );
-//     return updatedPatient
-//       ? { role: "patient" as const, data: updatedPatient as T }
-//       : { role: "base" as const, data: updatedBase as T };
-//   }
-
-//   // 3. If admin or other roles
-//   return { role: "base" as const, data: updatedBase as T };
-// };
-
 export const updateUser = async <T extends Document>(
   id: string,
   data: Partial<UserType | DoctorType | PatientType>
@@ -271,6 +235,15 @@ export const findUsers = async (filter: any = {}) => {
     return [...users, ...doctors, ...patients];
   } catch (error) {
     console.error("Error finding users:", error);
+    throw error;
+  }
+};
+
+export const findAppointmentUsingFilter = async (filter: any = {}) => {
+  try {
+    return await AppointmentModel.find(filter).lean();
+  } catch (error) {
+    console.error("Error finding appointments:", error);
     throw error;
   }
 };

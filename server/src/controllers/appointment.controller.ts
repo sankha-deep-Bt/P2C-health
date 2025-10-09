@@ -2,11 +2,14 @@ import { Response } from "express";
 import { AuthRequest } from "../middleware/auth.middleware";
 import {
   createAppointment,
-  findAppointmentUsingFilter,
+  findAppointment,
   removeAppointment,
   updateAppointmentStatus,
 } from "../services/appointment.services";
-import { findById } from "../services/user.services";
+import {
+  findAppointmentUsingFilter,
+  findById,
+} from "../services/user.services";
 import DoctorModel from "../models/doctor.model";
 
 // Patient books an appointment
@@ -49,21 +52,33 @@ export const getAppointments = async (req: AuthRequest, res: Response) => {
 
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    // Use findById to get profile info
-    const doctorProfile = await DoctorModel.findOne({ userId: userId });
-    if (!doctorProfile)
-      return res.status(404).json({ message: "Doctor profile not found" });
+    // Validate user exists
+    const user = await findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const filter: any = {};
-    if (role === "doctor") filter.doctorId = doctorProfile._id;
-    else filter.patientId = userId;
+    let filter: any = {};
 
+    if (role === "doctor") {
+      // Get doctor profile only if user is a doctor
+      const doctorProfile = await DoctorModel.findOne({ userId });
+      if (!doctorProfile)
+        return res.status(404).json({ message: "Doctor profile not found" });
+
+      filter.doctorId = doctorProfile._id;
+    } else if (role === "patient") {
+      // Patient sees only their own appointments
+      filter.patientId = userId;
+    } else {
+      return res.status(400).json({ message: "Invalid user role" });
+    }
+
+    // Fetch appointments using your helper function
     const appointments = await findAppointmentUsingFilter(filter);
 
-    if (!appointments || appointments.length === 0)
-      return res.status(404).json({ message: "Appointments not found" });
-
-    return res.status(200).json({ success: true, data: appointments });
+    return res.status(200).json({
+      success: true,
+      data: appointments || [],
+    });
   } catch (error) {
     return res.status(500).json({
       message: "Error fetching appointments",
@@ -96,26 +111,26 @@ export const updateAppointment = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const deleteAppointment = async (req: AuthRequest, res: Response) => {
-  try {
-    const { appointmentId } = req.params;
+// export const deleteAppointment = async (req: AuthRequest, res: Response) => {
+//   try {
+//     const { appointmentId } = req.params;
 
-    const appointment = await findAppointmentUsingFilter({
-      _id: appointmentId,
-    });
+//     const appointment = await findAppointmentUsingFilter({
+//       _id: appointmentId,
+//     });
 
-    if (!appointment || appointment.length === 0)
-      return res.status(404).json({ message: "Appointment not found" });
+//     if (!appointment || appointment.length === 0)
+//       return res.status(404).json({ message: "Appointment not found" });
 
-    await removeAppointment(appointmentId);
+//     await removeAppointment(appointmentId);
 
-    return res
-      .status(200)
-      .json({ success: true, message: "Appointment deleted" });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Error cancelling appointment",
-      error: (error as Error).message,
-    });
-  }
-};
+//     return res
+//       .status(200)
+//       .json({ success: true, message: "Appointment deleted" });
+//   } catch (error) {
+//     return res.status(500).json({
+//       message: "Error cancelling appointment",
+//       error: (error as Error).message,
+//     });
+//   }
+// };
